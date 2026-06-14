@@ -171,3 +171,47 @@ Mark tasks complete as you finish them:
 - AI features in this session are trait + stub only (no live API keys needed)
 - Take positions, don't ask open-ended questions
 - Go big on the first pass, user will trim later
+
+---
+
+## Part 3: After Completion — Session Handoff
+
+When all possible work in this session is done (or user asks to wrap up):
+
+### Create `genesis/session-handoff-s2.md`
+
+Write a Session Handoff file following the AGENTS.md FORAGENTS.md protocol. Include:
+
+```
+# Session Handoff — Session 2 Complete
+
+## What Happened in This Session
+[Summary of what was built — UI polish items, Rust modules, schema, etc.]
+
+## Project State After Session
+- Build status: [Code: Working / Code: Stub / etc.]
+- Current phase: Phase X (Y/Z tasks done)
+- What compiles and runs
+- What's next
+
+## Files Changed / Created
+[List of key files and what changed]
+
+## Remaining Phase 1 Tasks
+[Tasks still ⬜ / [ ] from CYCLES.md — so next session knows what to pick up]
+
+## Key Decisions Made
+[Any trade-offs, tech choices, simplifications applied]
+
+## What's Next — Phase 2
+[Brief pointer so next AI knows where to continue]
+```
+
+### Update these files before session ends:
+- `CYCLES.md` — all completed tasks marked `[x]`, progress bars updated
+- Feature `todos.md` files — completed items marked `[x]`
+- Feature `docs.md` files — add implementation notes for anything non-obvious
+
+### Do NOT update:
+- `ORIGINAL IDEA.md` — permanent record, never edited
+- `AGENTS.md` core protocol section — shared across all projects
