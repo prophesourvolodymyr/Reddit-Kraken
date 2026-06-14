@@ -1,8 +1,8 @@
 # F8 TODOs
 
 ## Provider Trait
-- [ ] Define `LlmProvider` trait in Rust
-- [ ] Define `ChatMessage`, `Analysis`, `EnhanceMode` types
+- [ ] Define `LlmProvider` trait in Rust (3 methods: evaluate_post, suggest_reply, enhance_text)
+- [ ] Define `Evaluation`, `EnhanceMode` types
 - [ ] Error handling for provider failures
 
 ## OpenAI Provider
@@ -18,8 +18,7 @@
 - [ ] Provider selector (which is active)
 - [ ] Test connection button
 
-## V2+ Providers (later cycles)
+## V2+ Providers (later phases)
 - [ ] Anthropic provider
 - [ ] Ollama provider
 - [ ] OpenRouter provider
-- [ ] Model-per-task configuration

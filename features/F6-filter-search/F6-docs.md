@@ -1,7 +1,7 @@
 # F6 — Filter/Search
 
 ## Overview
-Full-text search across all fetched posts with multi-filter support. SQLite FTS5 for fast local search.
+Full-text search across all fetched posts with multi-filter support. SQLite FTS5 for fast local search. Also supports searching saved posts within folders.
 
 ## Architecture
 
@@ -23,9 +23,9 @@ User types in search bar
 │  Apply Filters:      │
 │  • Subreddit         │
 │  • Date range        │
-│  • Score range       │
-│  • Status            │
-│  • Relevancy score   │
+│  • Worth responding  │
+│  • Saved/not saved   │
+│  • Archived          │
 └──────────┬───────────┘
            │
            ▼
@@ -40,12 +40,14 @@ User types in search bar
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  🔍 Search across all posts...          [Subreddit: All ▾]  │
-│  [Date: Any ▾]  [Score: Any ▾]  [Status: Any ▾]  [Clear]   │
+│  [Date: Any ▾]  [Worth: Any ▾]  [Saved: Any ▾]  [Clear]    │
 │  ────────────────────────────────────────────────────────── │
-│  Results (3 matching)                                        │
+│  Results (3 matching)                    [Export Links]     │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │ r/automation · Score 8 · 2h ago · Status: New       │   │
-│  │ "Looking for Python script to automate CSV exports"  │   │
+│  │ r/reactjs · ✦ Worth responding · 2h ago             │   │
+│  │ "How do I handle rewrites in Next.js config?"       │   │
+│  │  → reddit.com/r/reactjs/comments/abc123/            │   │
+│  │                              [Save to Folder]        │   │
 │  └──────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -73,10 +75,27 @@ END;
 - Full-text search on title + body
 - Subreddit filter dropdown (auto-populated from subscribed subs)
 - Date range: Today, This week, This month, Custom
-- Score range: Critical (9-10), Suggested (7-8), All
-- Status filter: New, Analyzed, Reviewed, Drafted, Responded, Dismissed
-- Combined: "python" + r/python + Score 7+ = narrow results
+- Worth responding filter: Any, Yes only, No
+- Saved filter: Any, Saved in folder, Not saved
+- Combined filter logic (AND across filters)
 - Clear all filters one-click
+- **Batch export links**: Select posts → copy/download list of Reddit URLs
+
+## Batch Export Links
+
+```
+┌──────────────────────────────────────────┐
+│  Export Links from Search Results        │
+│                                          │
+│  Select: [All] [None] [Worth responding] │
+│                                          │
+│  ☑ r/reactjs/comments/abc123/           │
+│  ☑ r/webdev/comments/def456/            │
+│  ☐ r/python/comments/ghi789/            │
+│                                          │
+│  [Copy to Clipboard] [Download .txt]    │
+└──────────────────────────────────────────┘
+```
 
 ## Nuances
 - **Empty results**: "No posts match your search" with suggestion to broaden
@@ -84,3 +103,4 @@ END;
 - **Pagination**: Load 20 results, scroll for more
 - **Sort**: By date (default) or by relevance score
 - **FTS5 limitations**: Exact word matching, no fuzzy — but fast and local
+- **Export**: Copy all selected post URLs to clipboard or download as .txt

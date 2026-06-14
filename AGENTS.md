@@ -1,21 +1,21 @@
 # AGENTS.md — Reddit Kraken
 
 ## What Is This Project About
-Reddit Kraken is a desktop app that aggregates Reddit posts from your chosen subreddits, uses AI to score them against your personal interests, and helps you compose replies with AI assistance — all in one Discord-like interface. Built for indie makers, devs, and founders who engage with Reddit communities but waste too much time scrolling and miss high-value reply opportunities.
+Reddit Kraken is a desktop app for power Reddit users. Its killer feature is **cross-posting** — write one post, tailor it per community, schedule or post across multiple subreddits. Minimal AI plays a supporting role: it finds the best posts worth responding to (without drowning you in scores) and assists in composing replies. Built for indie makers, devs, and founders who manage multi-community Reddit presence.
 
 ## Tech Stack
 - **Tauri** — lightweight native desktop app (Rust backend + React frontend), cross-platform (macOS/Windows/Linux, later iOS)
 - **React + shadcn/ui** — modern component library for a clean, minimal black-and-white UI
 - **SQLite** — zero-setup local database, perfect for a personal app with no server
-- **OpenAI** (V1) → **pluggable LLM providers** — GPT-4o-mini for cost-effective analysis, expand to 21+ providers via trait interface
-- **fastembed-rs** — local embeddings (all-MiniLM-L6-v2) for pre-filtering posts before costly LLM calls
+- **OpenAI** (V1) → **pluggable LLM providers** — GPT-4o-mini for cost-effective engagement evaluation, expand to 21+ providers via trait interface
 - **Reddit API (Script app)** — OAuth password grant, personal use, full access to posts/comments/PMs/submit
+- **Embedded HTTP API** — loopback-only REST API mirroring visual posting features (cross-post, schedule, drafts)
 
 ## Project Health
-- Build status: **Not started** (Designed phase)
-- Last major commit: Initial repo setup with README, ORIGINAL IDEA, session transcript
-- Current phase: **Cycle 0 — Design Complete, Ready to Build**
-- All 8 features: `F1-docs.md` + `F1-todos.md` written, zero code
+- Build status: **Code: Stub** (frontend UI shell built, backend not yet implemented)
+- Current phase: **Phase 1 — Foundation** (0/16 tasks)
+- UI: React components written with placeholder data, needs Tauri command integration
+- Backend: Cargo.toml configured, `src-tauri/src/` not started
 
 ---
 

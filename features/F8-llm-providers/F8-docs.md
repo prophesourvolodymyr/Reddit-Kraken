@@ -1,7 +1,7 @@
 # F8 — LLM Providers
 
 ## Overview
-Abstract provider interface so user can switch between OpenAI, Anthropic, local models, and 20+ others via a unified config.
+Abstract provider interface so user can switch between OpenAI, Anthropic, local models, and 20+ others via a unified config. Simplified trait — only the calls the app actually needs.
 
 ## Architecture
 
@@ -16,14 +16,12 @@ Abstract provider interface so user can switch between OpenAI, Anthropic, local 
 │  Provider trait (Rust)               │
 │                                      │
 │  trait LlmProvider {                 │
-│    fn analyze_post(&self, prompt)    │
-│      -> Result<Analysis>;            │
+│    fn evaluate_post(&self, prompt)   │
+│      -> Result<Evaluation>;          │
 │    fn suggest_reply(&self, prompt)   │
 │      -> Result<String>;              │
 │    fn enhance_text(&self, prompt)    │
 │      -> Result<String>;              │
-│    fn embed(&self, text)             │
-│      -> Result<Vec<f32>>;            │
 │  }                                   │
 └──────────────┬───────────────────────┘
                │
@@ -42,10 +40,19 @@ Abstract provider interface so user can switch between OpenAI, Anthropic, local 
 ```rust
 #[async_trait]
 pub trait LlmProvider: Send + Sync {
-    async fn chat(&self, messages: Vec<ChatMessage>) -> Result<String>;
-    async fn analyze_post(&self, post: &Post, profile: &Profile) -> Result<Analysis>;
-    async fn suggest_reply(&self, post: &Post, context: &str) -> Result<Vec<String>>;
-    async fn enhance(&self, draft: &str, mode: EnhanceMode) -> Result<String>;
+    /// Evaluate if a post is worth responding to
+    async fn evaluate_post(&self, prompt: &str) -> Result<Evaluation>;
+
+    /// Suggest a reply for a given post/message
+    async fn suggest_reply(&self, prompt: &str) -> Result<String>;
+
+    /// Enhance / rewrite / fix grammar for a draft text
+    async fn enhance_text(&self, draft: &str, mode: EnhanceMode) -> Result<String>;
+}
+
+pub struct Evaluation {
+    pub worth_responding: bool,
+    pub reason: String,
 }
 
 pub enum EnhanceMode {
@@ -54,12 +61,13 @@ pub enum EnhanceMode {
     FixGrammar,
     Expand,
 }
-
-pub struct ChatMessage {
-    pub role: String,  // "system" | "user" | "assistant"
-    pub content: String,
-}
 ```
+
+## What Changed From V1
+- **Removed**: `embed()` method (no more local embeddings)
+- **Removed**: `analyze_post()` with complex Analysis struct (0-10 scores, urgency, etc.)
+- **Simplified**: `evaluate_post()` returns simple `{worth_responding: bool, reason: string}`
+- **Kept**: `suggest_reply()`, `enhance_text()` — core AI assistance for composing
 
 ## Provider Storage
 
@@ -68,8 +76,8 @@ struct ProviderConfig {
     id: String,
     name: String,
     api_base: String,
-    api_key: String,         // encrypted
-    model: String,
+    api_key: String,         // encrypted at rest
+    model: String,           // default: gpt-4o-mini
     enabled: bool,
 }
 ```
@@ -90,8 +98,8 @@ Any OpenAI-compatible API works via the same interface.
 
 ## Nuances
 - **V1**: Only OpenAI implemented. Others = drop-in once trait is stable
-- **API keys**: Encrypted at rest in SQLite (OS-level encryption or keyring)
+- **API keys**: Encrypted at rest in SQLite
 - **Fallback**: If primary provider fails, try secondary
 - **Cost tracking**: Log token usage per provider per session
-- **Model config**: Each provider can have different model per task (e.g., GPT-4o-mini for analysis, GPT-4o for composing)
-- **Local models**: Ollama requires the user to have it running separately
+- **Model config**: GPT-4o-mini default, user can override per provider
+- **Local models**: Ollama requires user to run it separately

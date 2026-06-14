@@ -13,46 +13,49 @@
 - [x] AddSubButton (opens dialog to add sub)
 - [x] Scrollable list
 - [x] Settings gear icon at bottom
+- [ ] Saved folder icons section (bottom, below subs)
+- [ ] AddFolderButton
+- [ ] ForYouButton (home, app icon, unread badge, divider)
 
 ## TopBar
-- [x] TabBar: General, Filter/Search, AI Respond, Inbox
-- [x] SearchInput (context-aware — global or per-sub)
+- [x] TabBar: General, Filter, AI, Cross-Post, Inbox
+- [x] SearchInput (context-aware)
 - [x] Inbox notification badge
 
 ## Views
-- [x] General view with PostList
-- [x] Per-sub view (when clicking sidebar circle)
-- [x] Filter/Search view with FilterBar
-- [x] AI Respond split view
-- [x] Inbox view for PMs
-- [x] PostDetail view (when clicking a post)
+- [x] For You view (needs dual-mode toggle)
+- [ ] Digested mode — day+channel grouped posts
+- [ ] Normal mode — Reddit-style infinite scroll
+- [ ] Engagement Queue (AI tab)
+- [ ] Cross-Post Editor view (F4)
+- [x] PostDetail view
+- [x] Inbox view
 
 ## Components
-- [x] PostCard (title, score, sub, time, comments, AI badge)
-- [x] CriticalSection/SuggestedSection/AllPostsSection
-- [x] FAB component (bottom-right, tooltip, opens NewPost modal)
-- [x] NewPostModal (sub selector, type selector, title, body, AI buttons)
-- [x] DraftComposer (editor + AI suggestions)
-- [x] AIPanel (analysis card with reasoning)
-- [x] CommentThread + CommentCard + AICommentInsight
-- [x] MessageList + MessageDetail for PMs
+- [x] PostCard (title, score, sub, time, comments, ✦ badge)
+- [x] FAB component
+- [x] NewPostModal (add "Open in Cross-Post" button)
+- [ ] ForYouToggle (Digested/Normal switch)
+- [ ] EngagementCard (post + AI reason + [Reply]/[Dismiss]/[Save])
+- [ ] WorthRespondingBadge (✦ icon, no score number)
+- [ ] ArchivePrompt modal (save/discard on close)
+- [ ] RecoveryToast (on launch after crash)
 
 ## Tauri Commands (Rust → React)
-- [x] `get_posts(subreddit, status, limit)`
+- [x] `get_posts(subreddit, limit, offset)`
 - [x] `get_post_detail(post_id)`
 - [x] `get_subreddits()`
 - [x] `add_subreddit(name)`
-- [x] `analyze_post(post_id)`
-- [x] `submit_reply(post_id, body)`
-- [x] `create_post(subreddit, title, body, type)`
-- [x] `get_messages()`
-- [x] `send_message(to, subject, body)`
+- [ ] `get_worth_responding_posts()`
+- [ ] `get_digested_posts(date_range)`
+- [ ] `get_normal_feed(subs, cursor)`
+- [ ] `dismiss_post(post_id)`
+- [ ] `mark_seen(post_id)`
 
-## Drag & Drop + Folder Grouping ✅ DONE
-- [x] Replace HTML5 DnD with custom pointer-event drag (mouse/trackpad)
-- [x] Drag ghost: hide default, show custom drop indicator line between circles
-- [x] Drop-to-merge: drop circle onto another → create folder (2x2 mini-dot grid icon)
-- [x] Folder expand/collapse: click folder to reveal subs as smaller circles below
-- [x] Drag-out-of-folder: drag sub out of expanded folder to ungroup
-- [x] Spring-animate reorder: items slide apart to make room during drag
-- [x] Haptic-like feedback: dragged item scales up slightly, target area highlights
+## Drag & Drop + Folder Grouping
+- [x] Replace HTML5 DnD with custom pointer-event drag
+- [x] Drop-to-merge: create folder (2×2 mini-dot grid icon)
+- [x] Folder expand/collapse
+- [x] Drag-out-of-folder to ungroup
+- [x] Spring-animate reorder
+- [x] Custom drag preview and drop indicator

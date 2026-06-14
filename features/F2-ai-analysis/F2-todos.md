@@ -1,36 +1,31 @@
 # F2 TODOs
 
-## Embeddings
-- [ ] Integrate fastembed-rs in Rust
-- [ ] Load all-MiniLM-L6-v2 model at startup
-- [ ] Generate embedding for user profile
-- [ ] Generate embedding for each new post
-- [ ] Cosine similarity comparison
-- [ ] Pre-filter posts below similarity threshold
-
-## LLM Analysis
-- [ ] OpenAI client in Rust (reqwest)
-- [ ] Build prompt template: post + profile + sub prompt + comments
-- [ ] Parse structured JSON response
+## LLM Evaluation
+- [ ] Build prompt template: post + profile + sub prompt + top comments
+- [ ] Parse LLM response: `{worth_responding, reason}`
 - [ ] Handle malformed/empty LLM responses
 - [ ] Retry logic for LLM failures
 - [ ] Batch multiple posts in one LLM call
+- [ ] Skip posts where `seen=1` or age > 3 days
 
 ## Interest Profile
-- [ ] UI for writing/editing free-form profile
-- [ ] UI for per-sub prompts
-- [ ] Store in SQLite user_profile table
-- [ ] Re-embed when profile changes
+- [ ] React: UI for writing/editing free-form profile
+- [ ] React: UI for per-sub prompts
+- [ ] Rust: Store profile + sub prompts in SQLite
+- [ ] Re-evaluate unseen posts when profile changes
 
-## Scoring & Status
-- [ ] Implement score 1-10 system
-- [ ] Implement status transitions
-- [ ] Auto-set urgency based on score
-- [ ] Store analysis JSON on post
-- [ ] Highlight critical posts (score 9-10)
+## App Memory
+- [ ] Mark posts as `seen` on scroll/viewport exposure
+- [ ] Mark posts as `seen` on post detail open
+- [ ] Skip `seen=1` posts in evaluation pipeline
+- [ ] Never re-evaluate previously evaluated posts
+
+## Daily Digest
+- [ ] Rust: Query worth_responding posts grouped by date + subreddit
+- [ ] React: For You Digested view — per-day, per-channel sections
+- [ ] React: Toggle between Digested and Normal views
 
 ## Rust Modules
-- [ ] `analysis.rs` — pipeline orchestrator
-- [ ] `embeddings.rs` — fastembed wrapper
-- [ ] `llm.rs` — OpenAI client
+- [ ] `evaluation.rs` — LLM pipeline orchestrator
+- [ ] `llm.rs` — OpenAI client (batch + single)
 - [ ] `profile.rs` — interest profile CRUD

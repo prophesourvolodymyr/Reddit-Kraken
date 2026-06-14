@@ -9,8 +9,8 @@
 ## Filters
 - [ ] Subreddit dropdown filter (from subscribed list)
 - [ ] Date range filter (today, week, month, custom)
-- [ ] Score range filter (critical, suggested, all, custom)
-- [ ] Status filter (new, analyzed, reviewed, etc.)
+- [ ] Worth responding filter
+- [ ] Saved/not saved filter
 - [ ] Combined filter logic (AND across filters)
 - [ ] Clear all button
 
@@ -21,6 +21,13 @@
 - [ ] Empty state for no results
 - [ ] Result count display
 - [ ] Sort toggle (date / relevance)
+- [ ] [Save to Folder] button per result
+
+## Batch Export
+- [ ] Select checkboxes on search results
+- [ ] Select all / select none / select worth responding buttons
+- [ ] Copy selected links to clipboard
+- [ ] Download selected links as .txt file
 
 ## Tauri Command
 - [ ] `search_posts(query, filters, limit, offset)`

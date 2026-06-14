@@ -1,31 +1,28 @@
 # F7 TODOs
 
 ## Message Fetching
-- [ ] Implement GET /message/inbox
-- [ ] Implement GET /message/unread
-- [ ] Implement GET /message/sent
-- [ ] Store messages in SQLite messages table
-- [ ] Dedup by message_id
-- [ ] Poll inbox every 5 minutes
+- [ ] Poll `/message/inbox` every 5 minutes
+- [ ] Store in messages table (dedup by message ID)
 - [ ] Track unread count for badge
+- [ ] Fetch sent messages
 
-## Message Actions
-- [ ] Implement POST /api/compose
-- [ ] Implement POST /api/del_msg
-- [ ] Implement POST /api/read_message
-- [ ] Mark as read when opened
-- [ ] Mark all as read button
+## Compose & Send
+- [ ] POST /api/compose for new messages
+- [ ] POST /api/del_msg for delete
+- [ ] POST /api/read_message for mark as read
+- [ ] POST /api/read_all_messages
+- [ ] Draft persistence in SQLite
 
 ## UI
-- [ ] Inbox tab with unread badge
-- [ ] Inbox/Unread/Sent sub-tabs
-- [ ] Message list (sender, subject, time, preview)
-- [ ] Message detail view (full body)
-- [ ] Compose PM modal
-- [ ] AI assist in PM composer
-- [ ] Delete message button
-- [ ] Thread grouping by subject
+- [ ] InboxView with tabs (Inbox / Unread / Sent)
+- [ ] MessageList component
+- [ ] MessageDetail component
+- [ ] Compose modal (To, Subject, Body)
+- [ ] [🤖 Suggest Reply] button (manual, user-initiated)
+- [ ] [🤖 Enhance] / [🤖 Fix Grammar] buttons in compose
+- [ ] Unread count badge in sidebar/TopBar
+- [ ] Delete message with confirmation
 
 ## Rust Modules
-- [ ] `messages.rs` — fetch, send, delete messages
-- [ ] Integrate with F4 composer for AI assistance
+- [ ] `messages.rs` — fetch, send, delete, mark read
+- [ ] `pm_drafts.rs` — draft storage & retrieval

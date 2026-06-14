@@ -1,7 +1,7 @@
 # F7 — Private Messages
 
 ## Overview
-Full Reddit private messaging: inbox, unread, sent, compose, delete. AI-assisted replies for PMs too.
+Full Reddit private messaging: inbox, unread, sent, compose, delete. AI can suggest replies on demand but never auto-responds.
 
 ## Reddit PM API Endpoints
 
@@ -82,7 +82,7 @@ CREATE TABLE message_drafts (
 │  │ └────────────────────────────────────────────── │   │
 │  │    Hey! I saw your comment about Vercel...      │   │
 │  │  ─────────────────────────────────────────────   │   │
-│  │    [🤖 Suggest Reply]                           │   │
+│  │    [🤖 Suggest Reply]  [Reply]                  │   │
 │  └──────────────────────────────────────────────────┘   │
 │  ┌──────────────────────────────────────────────────┐   │
 │  │ ○ u/johndoe · 5h ago                             │   │
@@ -101,23 +101,22 @@ CREATE TABLE message_drafts (
 │         │  username                                  │   │
 │         └──────────────────────────────────────────┘   │
 │  Subject: ┌──────────────────────────────────────────┐  │
-│           │                                           │  │
-│           └──────────────────────────────────────────┘  │
-│  Message: ┌──────────────────────────────────────────┐  │
-│           │                                           │  │
-│           │  [🤖 Enhance] [🤖 Rewrite] [🤖 Expand]   │  │
-│           └──────────────────────────────────────────┘  │
-│                                                          │
-│  [Cancel]                         [Send Message ➔]      │
+│          │                                            │  │
+│          └──────────────────────────────────────────┘  │
+│  Body:    ┌──────────────────────────────────────────┐  │
+│          │                                            │  │
+│          │  [🤖 Enhance] [🤖 Fix Grammar]            │  │
+│          └──────────────────────────────────────────┘  │
+│                                                         │
+│  [Save Draft]                              [Send ➔]    │
 └──────────────────────────────────────────────────────────┘
 ```
 
 ## Nuances
-- **Polling**: Check inbox every 5 min (not 15 like posts — PMs are time-sensitive)
-- **Notifications**: Show unread count badge on Inbox tab + system notification
-- **Threaded**: Reddit messages are threaded — group by subject
-- **Mod messages**: Subreddit mod messages also appear in inbox (distinct icon)
-- **Delete**: Mark as deleted locally + call API to delete
-- **Rate limit**: Max 1 PM per 10 seconds
-- **Read receipts**: Mark as read when user opens the message
-- **AI assist**: Same composer as F4 — suggest, enhance, rewrite on PM replies
+- **No auto-respond**: AI never sends replies automatically. User always clicks [Send].
+- **AI suggestion**: Manual button, user initiates. Shows draft, user edits before sending.
+- **Rate limits**: PMs also subject to Reddit rate limits
+- **Blocked users**: Handle API errors gracefully
+- **Multiple recipients**: Reddit PM is always 1-to-1, no group messages
+- **Message search**: Search within messages via SQLite
+- **Desktop notification**: Tauri notification for new unread messages

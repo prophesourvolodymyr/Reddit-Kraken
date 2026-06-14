@@ -1,7 +1,7 @@
 # F3 — UI Interface
 
 ## Overview
-React + shadcn/ui frontend inside Tauri. Black & white minimalistic design. Discord-like layout with left bar, 4 main views, and full navigation.
+React + shadcn/ui frontend inside Tauri. Black & white minimalistic design. Discord-like layout with left sidebar, 5 main views, cross-posting editor, and saved folders panel.
 
 ## Layout
 
@@ -9,12 +9,12 @@ React + shadcn/ui frontend inside Tauri. Black & white minimalistic design. Disc
 ┌─────────────────────────────────────────────────────────────────────┐
 │                          REDDIT KRAKEN                              │
 │  ┌────┐  ┌─────────────────────────────────────────────────────────┐│
-│  │    │  │  [General]  [Filter/Search]  [AI Respond]  [Inbox]     ││
+│  │    │  │  [General]  [Filter]  [AI]  [Cross-Post]  [Inbox]     ││
 │  │ 🟠 │  ├─────────────────────────────────────────────────────────┤│
 │  │ 🟣 │  │  Content Area (80% width)                               ││
 │  │ 🟢 │  │                                                         ││
 │  │ 🔴 │  │  ┌─────────────────────────────────────────────────┐   ││
-│  │    │  │  │  Posts / Comments / AI Panel / Composer          │   ││
+│  │    │  │  │  Posts / Cross-Post Editor / Saved Folders      │   ││
 │  │ 🟡 │  │  │                                                  │   ││
 │  │ ⚪ │  │  └─────────────────────────────────────────────────┘   ││
 │  │    │  │                                                         ││
@@ -29,136 +29,231 @@ React + shadcn/ui frontend inside Tauri. Black & white minimalistic design. Disc
 ```
 
 ## Left Sidebar (70px)
+- Top: For You button (home icon, app logo, unread badge, divider)
 - Subreddit icons as circles (their Reddit avatar/icon)
-- Active sub highlighted with white border
+- Folder icons (2×2 mini-dot grid, Discord-like)
+- Active sub highlighted with white border ring
 - "+" button to add subreddit
+- **New**: Saved folders section at bottom (folder icons in muted style)
 - Bottom: settings gear icon
-- Scrollable if > 10 subs
+- Scrollable
+- Drag-and-drop reordering + folder grouping via pointer events (not HTML5 DnD)
+
+## TopBar Tabs
+
+| Tab | View | Purpose |
+|-----|------|---------|
+| General | For You | Main feed — toggles between Digested and Normal |
+| Filter | Filter/Search | Search with full filters |
+| AI | Engagement Queue | "Worth responding" posts only |
+| Cross-Post | Cross-Post Editor | Multi-sub posting workspace |
+| Inbox | PMs | Private messages |
 
 ## Views
 
-### 1. General Tab
+### 1. For You — Dual Mode
+
+Toggle button: `[Digested] [Normal]`
+
+**Digested mode** (default) — AI-curated posts organized by day + channel:
+
 ```
 ┌────────────────────────────────────────────────────────────┐
-│  General / For You                                        │
+│  📰 For You              [Digested] [Normal]              │
 │  ──────────────────────────────────────────────────────── │
-│  🔥 Critical (score 9-10)                                │
+│                                                           │
+│  📅 Today — r/reactjs                                    │
 │  ┌─────────────────────────────────────────────────────┐  │
-│  │ Post title · Score: 9 · r/reactjs · 2h             │  │
-│  │ 💡 AI: Direct match to your expertise               │  │
-│  │ 💬 12 comments · Status: New                         │  │
+│  │ ✦ "How do I handle rewrites in Next.js config?"    │  │
+│  │   ✦ Worth responding • 12 comments • 2h            │  │
+│  └─────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ ✦ "useEffect running twice in production"          │  │
+│  │   ✦ Worth responding • 8 comments • 5h             │  │
 │  └─────────────────────────────────────────────────────┘  │
 │                                                           │
-│  📌 Suggested (score 7-8)                                │
+│  📅 Yesterday — r/startups                               │
 │  ┌─────────────────────────────────────────────────────┐  │
-│  │ Post title · Score: 7 · r/python · 5h              │  │
-│  └─────────────────────────────────────────────────────┘  │
-│                                                           │
-│  📋 All Posts (score < 7)                                │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │ Post title · Score: 5 · r/startups · 1h            │  │
+│  │ ✦ "Just launched MVP — now what?"                  │  │
+│  │   ✦ Worth responding • 31 comments • 1d            │  │
 │  └─────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────┘
 ```
 
-### 2. Per-Sub View (click circle)
+**Normal mode** — classic Reddit-style scroll from user's chosen channels:
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  📰 For You              [Digested] [Normal]              │
+│  ──────────────────────────────────────────────────────── │
+│                                                           │
+│  r/reactjs                                               │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ "What's new in React 19?" · 245 ⬆ · 89 💬 · 3h    │  │
+│  │  r/reactjs · u/dev_user                              │  │
+│  └─────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ "State management in 2025?" · 432 ⬆ · 156 💬 · 5h │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                           │
+│  r/python                                                │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ "FastAPI vs Flask for new project?" · 178 ⬆ · 67 💬│  │
+│  └─────────────────────────────────────────────────────┘  │
+│                              ... infinite scroll ...       │
+└────────────────────────────────────────────────────────────┘
+```
+
+### 2. Per-Sub View (click sidebar circle)
+
 ```
 ┌────────────────────────────────────────────────────────────┐
 │  🟠 r/reactjs                  🔍 Search in sub...       │
 │  ──────────────────────────────────────────────────────── │
-│  [Hot]  [New]  [Top]  [AI Ranked]                        │
+│  [Hot]  [New]  [Top]                                    │
 │  ┌─────────────────────────────────────────────────────┐  │
-│  │ Post title · Score: 6 · 3h · 8 comments            │  │
-│  │ Status: Reviewed                                     │  │
+│  │ Post title · 245 ⬆ · 89 💬 · 3h · u/dev_user     │  │
+│  │ ✦ Worth responding                                  │  │
 │  └─────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────┘
 ```
 
-### 3. Filter/Search Tab
+### 3. Engagement Queue (AI tab)
+
+Dedicated view for all "Worth responding" posts — flat scrollable list, no complex sections:
+
 ```
 ┌────────────────────────────────────────────────────────────┐
-│  🔍 Search...                    [Subreddit ▾]           │
-│  [Date ▾]  [Score ▾]  [Status ▾]  [Clear]               │
+│  ✦ Worth Responding                    12 posts          │
 │  ──────────────────────────────────────────────────────── │
-│  Results (3)                                              │
 │  ┌─────────────────────────────────────────────────────┐  │
-│  │ Matching posts...                                    │  │
+│  │ r/reactjs · 2h ago                                  │  │
+│  │ "How do I handle rewrites in Next.js config?"      │  │
+│  │ 💡 They're asking about Vercel rewrites — your     │  │
+│  │    exact expertise.                                 │  │
+│  │ [Reply] [Dismiss] [Save to Folder]                 │  │
+│  └─────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ r/python · 5h ago                                   │  │
+│  │ "Need help with async file processing"             │  │
+│  │ 💡 Python async I/O question matches your profile. │  │
+│  │ [Reply] [Dismiss] [Save to Folder]                 │  │
 │  └─────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────┘
 ```
 
-### 4. AI Respond Tab
-Split view: left = priority queue, right = analysis + composer.
+### 4. Cross-Post Editor (see F4 docs for full detail)
 
-### 5. Inbox Tab (PMs)
+### 5. Inbox (PMs)
+
+## Saved Folders Panel (sidebar section)
+
+Bottom of sidebar, after subreddits:
+
 ```
-┌────────────────────────────────────────────────────────────┐
-│  📬 Messages                     [✍️ Compose]            │
-│  ──────────────────────────────────────────────────────── │
-│  [Inbox]  [Unread]  [Sent]                               │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │ ● u/user · 2h ago · "Hey, saw your post about..."  │  │
-│  └─────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────┘
+┌────┐
+│ ...│  ← subreddit circles above
+│ 🟡 │
+│ ⚪ │
+│────│  ← divider
+│ 📁 │  ← folder 1
+│ 📁 │  ← folder 2
+│ 📁 │  ← folder 3
+│ [+} │  ← new folder
+│────│
+│ ⚙️ │  ← settings
+└────┘
 ```
 
-## Component Tree
+Clicking a folder opens it in the main content area (see F10 docs).
+
+## Component Tree (extended)
 
 ```
 App
 ├── Sidebar
-│   ├── SubCircle (icon, active state, click)
+│   ├── ForYouButton (home)
+│   ├── SubCircle (icon, active state, unread badge)
+│   ├── FolderIcon (2×2 grid, Discord-like)
 │   ├── AddSubButton
+│   ├── SavedFolderItem (folder icons, click to open)
+│   ├── AddFolderButton
 │   └── SettingsButton
 ├── TopBar
-│   ├── TabBar (General | Filter/Search | AI Respond | Inbox)
-│   └── SearchInput (per-sub or global)
+│   ├── TabBar (General | Filter | AI | Cross-Post | Inbox)
+│   └── SearchInput
 ├── ContentArea
-│   ├── PostList (General view)
-│   │   ├── PostCard (score, title, sub, time, comments)
-│   │   ├── CriticalSection (score 9-10)
-│   │   ├── SuggestedSection (score 7-8)
-│   │   └── AllPostsSection (score < 7)
-│   ├── FilterView (Filter/Search tab)
-│   │   ├── FilterBar (sub, date, score, status dropdowns)
+│   ├── ForYouView (dual mode)
+│   │   ├── DigestedFeed (day+channel grouped)
+│   │   ├── NormalFeed (Reddit-style scroll)
+│   │   └── WorthRespondingBadge (✦ icon)
+│   ├── PostList (per-sub view)
+│   │   └── PostCard (✦ badge, score, sub, time, comments)
+│   ├── FilterView
+│   │   ├── FilterBar
 │   │   └── SearchResults
-│   ├── AIRespondView (split pane)
-│   │   ├── PriorityQueue
-│   │   │   ├── CriticalItem
-│   │   │   └── SuggestedItem
-│   │   └── AIPanel
-│   │       ├── PostPreview
-│   │       ├── AnalysisBlock (score, reason, comment insights)
-│   │       └── DraftComposer (editor + AI buttons)
+│   ├── EngagementQueue (AI tab)
+│   │   ├── EngagementCard (post + AI reason + actions)
+│   │   └── ActionBar ([Reply] [Dismiss] [Save to Folder])
+│   ├── CrossPostView (F4)
+│   │   ├── PostGrid (multi-sub window layout)
+│   │   ├── PerSubPanel (individual adjustments)
+│   │   └── SchedulePanel
 │   ├── PostDetail
 │   │   ├── PostContent
 │   │   ├── CommentThread
-│   │   │   ├── CommentCard
-│   │   │   └── AICommentInsight
-│   │   └── ReplyComposer (inline)
+│   │   └── ReplyComposer (inline, manual AI assist button)
 │   ├── InboxView
 │   │   ├── MessageList
 │   │   └── MessageDetail
-│   └── NewPostModal (FAB overlay)
-│       ├── SubredditSelector (auto-detected, changeable)
+│   ├── SavedFolderView (F10)
+│   │   ├── FolderList
+│   │   ├── PostGrid (saved posts)
+│   │   └── ExportButton
+│   └── NewPostModal (FAB overlay, single-sub quick post)
+│       ├── SubredditSelector
 │       ├── PostTypeSelector (Text | Link | Image)
-│       ├── TitleInput (with AI suggest)
-│       ├── BodyEditor (with AI enhance/rewrite/expand)
+│       ├── TitleInput (AI suggest)
+│       ├── BodyEditor (AI enhance/rewrite)
 │       ├── FlairSelector
-│       └── PostButton
+│       ├── NSFW/Spoiler toggles
+│       └── PostButton / Open in Cross-Post button
 └── FAB (floating action button, bottom-right)
 ```
 
 ## Styling
 - **Theme**: Black & white minimalistic
 - **Titles**: Inter Bold 18px
-- **Body**: Inter Regular
+- **Body**: Inter Regular 14px
 - **Colors**: #000 (black), #fff (white), #333 (muted text), #f5f5f5 (bg), #e5e5e5 (borders)
-- **shadcn components**: Button, Card, Input, Dialog, Tabs, Select, ScrollArea
-- **Icons**: Lucide (consistent SVG set)
+- **shadcn components**: Button, Card, Input, Dialog, Tabs, Select, ScrollArea, Toggle
+- **Icons**: Lucide
 - **Dark mode**: Invert colors — bg black, text white
 - **Cursor pointer**: All interactive elements
 - **Transitions**: 150-200ms ease
+- **Worth responding badge**: ✦ icon + subtle highlight border, no score numbers
+
+## For You Toggle Logic
+
+```
+┌──────────────────────────────────┐
+│  Digested mode                   │
+│  - Show: worth_responding=1      │
+│  - Group by: date → subreddit    │
+│  - Sort: newest first            │
+│  - Default for first open        │
+└──────────────────────────────────┘
+
+┌──────────────────────────────────┐
+│  Normal mode                     │
+│  - Show: all posts (hot + new)   │
+│  - From: user's subscribed subs  │
+│  - Sort: Reddit-style feed       │
+│  - Infinite scroll               │
+│  - ✦ badge still shows if post   │
+│    is worth responding           │
+└──────────────────────────────────┘
+```
 
 ## Nuances
 - **Empty state**: "No posts yet. Add a subreddit to get started." with illustration
@@ -166,17 +261,10 @@ App
 - **Error state**: Inline error with retry button
 - **Scroll restoration**: Remember scroll position when navigating back
 - **Keyboard navigation**: Tab between posts, Enter to open, Escape to close
-- **Responsive**: Minimum 900px width for desktop; mobile adaptations later
-- **Infinite scroll**: Load more posts as user scrolls down
+- **Responsive**: Minimum 900px width for desktop
+- **Infinite scroll**: Load more posts as user scrolls (Normal mode)
 - **FAB tooltip**: Shows current auto-detected subreddit on hover
-
-## Sidebar Drag + Discord-like Groups
-- HTML5 Drag-and-Drop is intentionally not used because macOS Tauri WKWebView does not reliably emit `draggable`, `dragstart`, or `drop` events.
-- `Sidebar.tsx` now uses pointer capture with `onPointerDown`, `onPointerMove`, `onPointerUp`, and `onPointerCancel` so mouse/trackpad dragging stays inside React/Tauri.
-- Root subreddit icons and folder icons are both draggable. Expanded folder children are smaller draggable subreddit icons.
-- Dropping near an item's center calls `onMerge`; dropping above/below calls `onReorder` with an insertion path.
-- Dragging a child out of an expanded folder to a root insertion slot converts it back into a root subreddit item.
-- The sidebar renders a custom fixed-position drag preview and fixed-position white drop indicator line instead of relying on a browser drag ghost.
-- Discord-like grouping is represented by a 2x2 folder avatar grid, unread badges, target rings, scale-up feedback, and animated spacing while dragging.
-- The final direction is Discord-inspired but flatter: solid avatar colors, no gradients, minimal rings, and no heavy shadows.
-- The top sidebar control is a separate `For You` home button with an app icon, unread badge, and divider. Clicking it clears the active subreddit and returns to the General feed.
+- **"Open in Cross-Post"**: Button in FAB modal to open post in full cross-posting editor
+- **Saved folders**: Bottom sidebar section, folder icons, click to open
+- **Archive prompts**: Modal on close with unsaved work
+- **Recovery toast**: On launch after crash — "Recovered 2 drafts from last session"
