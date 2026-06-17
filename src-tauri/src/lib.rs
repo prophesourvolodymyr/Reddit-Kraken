@@ -317,16 +317,18 @@ fn get_posts(
     limit: u32,
     offset: u32,
 ) -> Result<Vec<Post>, String> {
+    eprintln!("[get_posts] CALLED sub={:?}", subreddit_id);
     if subreddit_id.is_some() {
-        if let Ok(client_guard) = state.reddit_client.lock() {
-            if client_guard.is_some() {
-                println!("[get_posts] Connected, fetching live...");
-                drop(client_guard);
-                fetch_posts_live_inner(&state, &subreddit_id);
-            }
+        let has_client = state.reddit_client.lock().map(|g| g.is_some()).unwrap_or(false);
+        eprintln!("[get_posts] has_client={}", has_client);
+        if has_client {
+            eprintln!("[get_posts] Connected, fetching live...");
+            fetch_posts_live_inner(&state, &subreddit_id);
         }
     }
-    get_posts_inner(&state, subreddit_id, limit, offset)
+    let result = get_posts_inner(&state, subreddit_id, limit, offset);
+    eprintln!("[get_posts] returning {} posts", result.as_ref().map(|v| v.len()).unwrap_or(0));
+    result
 }
 
 fn fetch_posts_live_inner(state: &State<AppState>, subreddit_id: &Option<String>) {
@@ -1372,7 +1374,7 @@ pub fn run() {
 
             let auth_mode = state.db.get_auth("reddit_auth_mode").unwrap_or(None);
             if auth_mode.is_some() {
-                println!("[startup] Found stored auth, attempting reconnect...");
+                eprintln!("[startup] Found stored auth, attempting reconnect...");
                 let has_oauth = state.db.get_auth("reddit_client_id").unwrap_or(None).is_some();
                 let has_username = state.db.get_auth("reddit_username").unwrap_or(None).is_some();
                 let has_password = state.db.get_auth("reddit_password").unwrap_or(None).is_some();
@@ -1382,25 +1384,25 @@ pub fn run() {
                     if mode == "manual" {
                         if let Ok(Some(enc_token)) = state.db.get_auth("reddit_token_v2") {
                             if let Ok(token_v2) = decrypt_api_key(&enc_token) {
-                                println!("[startup] Restoring manual token...");
+                                eprintln!("[startup] Restoring manual token...");
                                 let client = RedditClient::new_with_token(token_v2);
                                 if let Ok(Some(enc_session)) = state.db.get_auth("reddit_session_cookie") {
                                     if let Ok(session_cookie) = decrypt_api_key(&enc_session) {
                                         client.set_session_cookie(session_cookie);
-                                        println!("[startup] Session cookie for auto-refresh restored");
+                                        eprintln!("[startup] Session cookie for auto-refresh restored");
                                     }
                                 }
                                 if let Ok(me) = client.ping() {
-                                    println!("[startup] Reconnected as u/{} via manual token", me);
+                                    eprintln!("[startup] Reconnected as u/{} via manual token", me);
                                     let client_arc = Arc::new(client);
                                     *state.reddit_client.lock().unwrap() = Some(client_arc.clone());
                                     let _ = start_scheduler_inner(&state, client_arc);
                                 } else if let Ok(Some(enc_session)) = state.db.get_auth("reddit_session_cookie") {
                                     if let Ok(session_cookie) = decrypt_api_key(&enc_session) {
-                                        println!("[startup] Token expired, trying session refresh...");
+                                        eprintln!("[startup] Token expired, trying session refresh...");
                                         let mut refresh_client = RedditClient::new_with_token(String::new());
                                         if let Ok(new_token) = refresh_client.refresh_via_session(&session_cookie) {
-                                            println!("[startup] Got fresh token via session, storing...");
+                                            eprintln!("[startup] Got fresh token via session, storing...");
                                             let enc_new = encrypt_api_key(&new_token).unwrap_or_default();
                                             let _ = state.db.set_auth("reddit_token_v2", &enc_new);
                                             let client = RedditClient::new_with_token(new_token);
@@ -1411,7 +1413,7 @@ pub fn run() {
                                         }
                                     }
                                 } else {
-                                    println!("[startup] Stored token expired, clearing...");
+                                    eprintln!("[startup] Stored token expired, clearing...");
                                     let _ = state.db.conn.lock().unwrap().execute_batch(
                                         "DELETE FROM auth; DELETE FROM subreddits; DELETE FROM posts;"
                                     );
@@ -1439,7 +1441,7 @@ pub fn run() {
                                 ) {
                                     let client = RedditClient::new(client_id, client_secret, username.clone(), password);
                                     if let Ok(tokens) = client.authenticate() {
-                                        println!("[startup] Reconnected as u/{} via OAuth", tokens.username);
+                                        eprintln!("[startup] Reconnected as u/{} via OAuth", tokens.username);
                                         let client_arc = Arc::new(client);
                                         *state.reddit_client.lock().unwrap() = Some(client_arc.clone());
                                         let _ = start_scheduler_inner(&state, client_arc);
