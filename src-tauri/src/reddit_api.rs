@@ -224,39 +224,22 @@ impl RedditClient {
     }
 
     fn get_valid_token(&self) -> Result<String, AppError> {
+        if self.auth_mode == AuthMode::ManualToken {
+            return self.tokens.lock().unwrap()
+                .as_ref()
+                .map(|t| t.access_token.clone())
+                .ok_or_else(|| AppError::Auth("No token set".into()));
+        }
+
         let needs_refresh = {
             let tokens = self.tokens.lock().unwrap();
             tokens.as_ref().map_or(true, |t| {
-                chrono::Utc::now().timestamp() >= t.expires_at - 3600
+                chrono::Utc::now().timestamp() >= t.expires_at - 60
             })
         };
 
         if needs_refresh {
-            if self.auth_mode == AuthMode::ManualToken {
-                if let Ok(Some(session)) = self.session_for_refresh.lock()
-                    .map(|g| g.clone())
-                {
-                    println!("[auth] Token expiring, refreshing via session cookie...");
-                    match self.refresh_via_session(&session) {
-                        Ok(new_token) => {
-                            println!("[auth] Token refreshed successfully");
-                            let expires_at = chrono::Utc::now().timestamp() + 82800;
-                            let mut tokens = self.tokens.lock().unwrap();
-                            *tokens = Some(AuthTokens {
-                                access_token: new_token,
-                                refresh_token: None,
-                                expires_at,
-                                username: tokens.as_ref().and_then(|t| {
-                                    if t.username.is_empty() { None } else { Some(t.username.clone()) }
-                                }).unwrap_or_default(),
-                            });
-                        }
-                        Err(e) => eprintln!("[auth] Token refresh failed: {}", e),
-                    }
-                }
-            } else {
-                self.authenticate()?;
-            }
+            self.authenticate()?;
         }
 
         let tokens = self.tokens.lock().unwrap();
@@ -266,7 +249,7 @@ impl RedditClient {
             .ok_or_else(|| AppError::Auth("No valid token".into()))
     }
 
-    fn refresh_via_session(&self, session_cookie: &str) -> Result<String, AppError> {
+    pub fn refresh_via_session(&self, session_cookie: &str) -> Result<String, AppError> {
         let response = self.client
             .get(REDDIT_BASE)
             .header("User-Agent", USER_AGENT)

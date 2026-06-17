@@ -1255,6 +1255,9 @@ fn disconnect_reddit(state: State<AppState>) -> Result<(), String> {
         handle.abort();
     }
     *state.reddit_client.lock().map_err(|e| e.to_string())? = None;
+    state.db.conn.lock().map_err(|e| e.to_string())?
+        .execute_batch("DELETE FROM auth; DELETE FROM subreddits; DELETE FROM posts;")
+        .map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -1392,6 +1395,26 @@ pub fn run() {
                                     let client_arc = Arc::new(client);
                                     *state.reddit_client.lock().unwrap() = Some(client_arc.clone());
                                     let _ = start_scheduler_inner(&state, client_arc);
+                                } else if let Ok(Some(enc_session)) = state.db.get_auth("reddit_session_cookie") {
+                                    if let Ok(session_cookie) = decrypt_api_key(&enc_session) {
+                                        println!("[startup] Token expired, trying session refresh...");
+                                        let mut refresh_client = RedditClient::new_with_token(String::new());
+                                        if let Ok(new_token) = refresh_client.refresh_via_session(&session_cookie) {
+                                            println!("[startup] Got fresh token via session, storing...");
+                                            let enc_new = encrypt_api_key(&new_token).unwrap_or_default();
+                                            let _ = state.db.set_auth("reddit_token_v2", &enc_new);
+                                            let client = RedditClient::new_with_token(new_token);
+                                            client.set_session_cookie(session_cookie);
+                                            let client_arc = Arc::new(client);
+                                            *state.reddit_client.lock().unwrap() = Some(client_arc.clone());
+                                            let _ = start_scheduler_inner(&state, client_arc);
+                                        }
+                                    }
+                                } else {
+                                    println!("[startup] Stored token expired, clearing...");
+                                    let _ = state.db.conn.lock().unwrap().execute_batch(
+                                        "DELETE FROM auth; DELETE FROM subreddits; DELETE FROM posts;"
+                                    );
                                 }
                             }
                         }
