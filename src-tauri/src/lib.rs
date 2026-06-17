@@ -203,31 +203,37 @@ fn fetch_posts_live(
             .unwrap_or(0);
         drop(conn);
 
+        println!("[fetch_live] sub={:?} id={:?} name={:?} existing={}", sub_id, subreddit_id, name, existing_count);
+
         if let Some(sub_name) = name {
-            if existing_count < 10 {
-                match client.fetch_posts(&sub_name) {
-                    Ok(fresh) => {
-                        let conn = state.db.conn.lock().map_err(|e| e.to_string())?;
-                        for post in &fresh {
-                            let _ = conn.execute(
-                                "INSERT OR IGNORE INTO posts (id, subreddit_id, title, body, author, url, score, num_comments, created_utc, flair_text, over_18, spoiler, fetched_at)
-                                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-                                params![
-                                    post.id, post.subreddit_id, post.title, post.body,
-                                    post.author, post.url, post.score, post.num_comments,
-                                    post.created_utc, post.flair_text,
-                                    post.over_18 as i32, post.spoiler as i32, post.fetched_at,
-                                ],
-                            );
-                        }
+            println!("[fetch_live] Fetching r/{} from Reddit API...", sub_name);
+            match client.fetch_posts(&sub_name) {
+                Ok(fresh) => {
+                    println!("[fetch_live] r/{}: got {} posts", sub_name, fresh.len());
+                    let conn = state.db.conn.lock().map_err(|e| e.to_string())?;
+                    for post in &fresh {
+                        let _ = conn.execute(
+                            "INSERT OR IGNORE INTO posts (id, subreddit_id, title, body, author, url, score, num_comments, created_utc, flair_text, over_18, spoiler, fetched_at)
+                             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                            params![
+                                post.id, post.subreddit_id, post.title, post.body,
+                                post.author, post.url, post.score, post.num_comments,
+                                post.created_utc, post.flair_text,
+                                post.over_18 as i32, post.spoiler as i32, post.fetched_at,
+                            ],
+                        );
                     }
-                    Err(e) => eprintln!("Live fetch failed for r/{}: {}", sub_name, e),
                 }
+                Err(e) => eprintln!("[fetch_live] FAILED r/{}: {}", sub_name, e),
             }
+        } else {
+            eprintln!("[fetch_live] No matching subreddit name for id: {}", sub_id);
         }
     }
 
-    get_posts_inner(&state, subreddit_id, 50, 0)
+    let result = get_posts_inner(&state, subreddit_id, 50, 0);
+    println!("[fetch_live] Returning {} posts", result.as_ref().map(|v| v.len()).unwrap_or(0));
+    result
 }
 
 fn get_posts_inner(
