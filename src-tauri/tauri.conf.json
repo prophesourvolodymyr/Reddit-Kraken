@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "ai.kraken.reddit",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "/Users/volodymurvasualkiw/GSpace/Next:Open/Reddit-Kraken/node_modules/.bin/vite",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "/Users/volodymurvasualkiw/GSpace/Next:Open/Reddit-Kraken/node_modules/.bin/tsc -b && /Users/volodymurvasualkiw/GSpace/Next:Open/Reddit-Kraken/node_modules/.bin/vite build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -15,10 +15,15 @@
         "title": "Reddit Kraken",
         "width": 1200,
         "height": 800,
-        "minWidth": 900,
+        "minWidth": 360,
         "minHeight": 600,
         "resizable": true,
-        "decorations": true
+        "decorations": true,
+        "transparent": true,
+        "titleBarStyle": "Transparent",
+        "hiddenTitle": true,
+        "trafficLightPosition": { "x": 18, "y": 18 },
+        "backgroundColor": "#000000"
       }
     ],
     "security": {

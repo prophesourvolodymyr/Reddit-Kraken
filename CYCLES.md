@@ -8,32 +8,33 @@ F1 + F3 + F8               F4 + F2 + F10            F6 + F7 + F9           F11 +
 
 ---
 
-## Phase 1 — Foundation ⬜ CURRENT
+## Phase 1 — Foundation ✅ ACTIVE
 **Features:** F1 (Reddit Fetching), F3 (UI Interface), F8 (LLM Providers)
 
 | # | Task | Status |
 |---|------|--------|
-| 1 | Rust: Cargo project structure, modules scaffold | ⬜ |
-| 2 | Rust: SQLite schema (subreddits, posts, comments, auth) | ⬜ |
-| 3 | Rust: Reddit OAuth password grant auth + token refresh | ⬜ |
-| 4 | Rust: Polling scheduler (tokio cron) — fetch posts per sub | ⬜ |
-| 5 | Rust: Dedup + store posts/comments in SQLite | ⬜ |
-| 6 | Rust: Rate limiting + exponential backoff | ⬜ |
-| 7 | Rust: Archiving hooks — save state on quit, prompt discard | ⬜ |
-| 8 | React: UI shell — Sidebar, TopBar, PostList, PostDetail | ⬜ |
-| 9 | React: FAB + NewPostModal + SettingsPanel | ⬜ |
-| 10 | React: For You dual-mode (Digested / Normal) | ⬜ |
-| 11 | React: Drag-and-drop sidebar with folder grouping | ⬜ |
-| 12 | React: AI badge ("Worth responding") on post cards | ⬜ |
-| 13 | Rust: LlmProvider trait (evaluate_post, suggest_reply, enhance) | ⬜ |
-| 14 | Rust: OpenAI provider implementation | ⬜ |
-| 15 | React: Settings UI for LLM provider config | ⬜ |
-| 16 | API key encryption at rest in SQLite | ⬜ |
+| 1 | Rust: Cargo project structure, modules scaffold | [x] |
+| 2 | Rust: SQLite schema (subreddits, posts, comments, auth) | [x] |
+| 3 | Rust: Reddit OAuth password grant auth + token refresh | [x] |
+| 4 | Rust: Polling scheduler (tokio cron) — fetch posts per sub | [x] |
+| 5 | Rust: Dedup + store posts/comments in SQLite | [x] |
+| 6 | Rust: Rate limiting + exponential backoff | [x] |
+| 7 | Rust: Archiving hooks — save state on quit, prompt discard | [x] |
+| 8 | React: UI shell — Sidebar, TopBar, PostList, PostDetail | [x] |
+| 9 | React: FAB + NewPostModal + SettingsPanel | [x] |
+| 10 | React: For You dual-mode (Digested / Normal) | [x] |
+| 11 | React: Drag-and-drop sidebar with folder grouping | [x] |
+| 12 | React: AI badge ("Worth responding") on post cards | [x] |
+| 13 | Rust: LlmProvider trait (evaluate_post, suggest_reply, enhance) | [x] |
+| 14 | Rust: OpenAI provider implementation | [x] |
+| 15 | React: Settings UI for LLM provider config | [x] |
+| 16 | API key encryption at rest in SQLite | [x] |
 
 ---
 
-## Phase 2 — Core Engine ⬜
+## Phase 2 — Core Engine ⬜ NEXT
 **Features:** F4 (Cross-Posting), F2 (AI Engagement), F10 (Saved Folders)
+**Prompts:** `prompts/F2-phase-1-evaluation-pipeline.md` → `prompts/F10-phase-1-folder-system.md` → `prompts/F4-phase-1-cross-post-editor.md`
 
 | # | Task | Status |
 |---|------|--------|
@@ -95,7 +96,7 @@ F1 + F3 + F8               F4 + F2 + F10            F6 + F7 + F9           F11 +
 ---
 
 ## Progress
-Phase 1 ░░░░░░░░░░   0% (0/16)
+Phase 1 ██████████ 100% (16/16)
 Phase 2 ░░░░░░░░░░   0% (0/16)
 Phase 3 ░░░░░░░░░░   0% (0/13)
 Phase 4 ░░░░░░░░░░   0% (0/9)

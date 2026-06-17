@@ -1,0 +1,10 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for Reddit Kraken",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:allow-open",
+    "core:window:allow-start-dragging"
+  ]
+}

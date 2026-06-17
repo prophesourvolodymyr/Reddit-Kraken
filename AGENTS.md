@@ -1,314 +1,376 @@
-# AGENTS.md — Reddit Kraken
-
-## What Is This Project About
-Reddit Kraken is a desktop app for power Reddit users. Its killer feature is **cross-posting** — write one post, tailor it per community, schedule or post across multiple subreddits. Minimal AI plays a supporting role: it finds the best posts worth responding to (without drowning you in scores) and assists in composing replies. Built for indie makers, devs, and founders who manage multi-community Reddit presence.
-
-## Tech Stack
-- **Tauri** — lightweight native desktop app (Rust backend + React frontend), cross-platform (macOS/Windows/Linux, later iOS)
-- **React + shadcn/ui** — modern component library for a clean, minimal black-and-white UI
-- **SQLite** — zero-setup local database, perfect for a personal app with no server
-- **OpenAI** (V1) → **pluggable LLM providers** — GPT-4o-mini for cost-effective engagement evaluation, expand to 21+ providers via trait interface
-- **Reddit API (Script app)** — OAuth password grant, personal use, full access to posts/comments/PMs/submit
-- **Embedded HTTP API** — loopback-only REST API mirroring visual posting features (cross-post, schedule, drafts)
-
-## Project Health
-- Build status: **Code: Stub** (frontend UI shell built, backend not yet implemented)
-- Current phase: **Phase 1 — Foundation** (0/16 tasks)
-- UI: React components written with placeholder data, needs Tauri command integration
-- Backend: Cargo.toml configured, `src-tauri/src/` not started
-
----
-
-# FORAGENTS.md — AI Project Management System
-
-This is the **meta-guide** for how AI agents work in any software project.
-Copy it to new repos as-is. It needs no modification.
-
----
-
-> **Prime Directive:** Transform raw ideas into fully specified, maximally ambitious projects.
-> The AI recommends. The user decides. **AI never cuts first — the user cuts.**
-> Go big. Go dangerous. Shrink only when the user says shrink.
-
----
+# AGENTS.md — AI Project Management System
 
 ## 1. Bootstrap — What AI Does First
 
-### State A: Empty repo
-1. Ask the user for the project idea
-2. Save raw response to `docs/ORIGINAL_IDEA.md`
-3. Run the AUDIT Protocol (Section 6)
-4. Generate folder + file structure (Section 5)
-5. Fill in Project Purpose section above
+When opening this project, determine which state the project is in:
 
-### State B: Has `docs/ORIGINAL_IDEA.md` and/or `DIAGRAM.png`
-1. Read `ORIGINAL_IDEA.md` carefully
-2. Read every `DIAGRAM.png` in `docs/` — they are the blueprint
-3. Run the AUDIT Protocol using diagram context
-4. Generate folder + file structure
-5. Move each `DIAGRAM.png` into its matching `features/Fn-[Name]/` folder
-6. Fill in Project Purpose section above
+### State A: Empty repo — no `features/`, no `CYCLES.md`
+1. Read everything in `genesis/`
+2. Read any external reference projects included
+3. Read `STYLES.md` if present (design conventions)
+4. Ask user: "What should be Feature 01?"
+5. Create `features/DOCKS.md` index + F01 DOCKS.md
+6. Create `CYCLES.md` with Cycle 1
+7. Run AUDIT for F01, then implement
 
-### State C: Has `features/`, `CYCLES.md`, etc.
-1. Read `AGENTS.md` to understand the project
-2. Read `CYCLES.md` — understand what is done, what is next, what is blocked
-3. Read the relevant `features/Fn-[Name]/TODO.md` before touching any feature
-4. Never create files that already exist
-5. Update Project Purpose only if empty or missing
+### State B: Has `genesis/` + `STYLES.md` but no `features/`
+1. Read everything in `genesis/`
+2. Read `STYLES.md`
+3. Read all dependency/reference code
+4. Propose feature breakdown to user (all F01–FNN)
+5. Create all DOCKS.md files + `features/DOCKS.md` index
+6. Create `CYCLES.md`
+7. Run AUDIT for F01, then implement
+
+### State C: Has `features/`, `CYCLES.md`, active feature docs
+1. Read `features/DOCKS.md` — understand full project map
+2. Read `CYCLES.md` — find current active cycle
+3. Read the active feature's DOCKS.md + all its dependency DOCKS.md files
+4. Ask user: "Continue Cycle N for FXX?" or "Start next feature?"
+5. If starting: run AUDIT Protocol for that feature
+6. If continuing: pick up from last verified phase
 
 ---
 
 ## 2. Project Identity
 
-Fill these in after AUDIT confirmation. Update as the project evolves.
-They are the first thing any new agent reads.
+### File Structure
+```
+Project/
+├── AGENTS.md              ← this file (the system)
+├── CYCLES.md              ← development cycle tracking
+├── STYLES.md              ← design system conventions (optional)
+├── genesis/               ← origin docs, never modify after creation
+│   ├── ORIGINAL IDEA.md   ← what we're building and why
+│   └── REFERENCE/         ← images, links, research
+├── features/              ← all feature documentation
+│   ├── DOCKS.md           ← root index of every feature
+│   ├── F01-name/          ← feature folder
+│   │   ├── DOCKS.md       ← what it is, what it owns, verification
+│   │   ├── F01-AUDIT.md   ← optional, pre-build audit output
+│   │   ├── F01-A-sub/     ← sub-feature (alphabetical nesting)
+│   │   │   └── DOCKS.md
+│   │   └── F01-B-sub/
+│   │       └── DOCKS.md
+│   ├── F02-name/
+│   └── _archive/          ← old docs, reference only, never build from
+└── prompts/               ← multi-agent phase prompts
+    └── F01-phase-1.md
+```
+
+### Feature Folder Rules
+- Every feature gets a numbered folder: `FNN-lowercase-with-dashes`
+- Every feature gets a `DOCKS.md`
+- Sub-features nest inside with alphabetical codes: `FNN-A-sub-name/`
+- Audit files are OPTIONAL — only for features with significant unknowns
+- Archives: old docs go to `_archive/`, never built from
+
+### DOCKS.md Template
+```markdown
+# FNN — Feature Name
+
+Brief description.
+
+## What We Build
+Concrete deliverables. No ambiguity.
+
+## Architecture
+Component diagram or view hierarchy.
+
+## States (if applicable)
+| State | Size | Style | Content |
+|---|---|---|---|
+
+## Animation Rules (if applicable)
+| Animation | mass | stiffness | damping |
+|---|---|---|---|
+
+## Files
+- `path/File.ext` — what it does
+
+## Dependencies
+- FXX — must be verified before this starts
+
+## Verification
+- [ ] device test checklist
+```
 
 ---
 
-## 3. File Structure
+## 3. The Feature System
+
+### Linear Build Order
+
+Every feature is numbered F01, F02, etc. Features are built in strict linear order:
 
 ```
-DESIGN.md               ← visual identity, colors, typography, tone
-BRAND.md                ← ecosystem context (only if part of larger suite)
-TECHSTACK.md            ← tech bible: languages, frameworks, conventions, reasons
-AGENTS.md               ← this file — project purpose + agent meta-guide
-CYCLES.md               ← phase tracker: phases → grouped features → flat [x] task list
-features/
-  F1-[Name]/
-    TODO.md             ← task checklist [ ] → [x]
-    DOCS.md             ← implementation wiki
-    DIAGRAM.png         ← human-provided architecture diagram
-  F2-[Name]/
-    TODO.md
-    DOCS.md
-  ...
-docs/
-  ORIGINAL_IDEA.md      ← raw user idea, never edit
-  DIAGRAM.png           ← top-level blueprint
+F01 → F02 → F03 → F04 → F05 → F06 → F07 → F08
+                                              │
+                                   ┌──────────┘
+                                   ▼
+                   F09 → F10 → F11 → F12
 ```
 
-### Sub-feature nesting for chunky features
+Later features branch into parallelizable groups that don't block each other. But the core chain (F01→...→F08) is sequential — each feature depends on the ones before it.
 
-When a feature is large, the AI should propose splitting it into sub-features:
+You cannot start a feature until the ones it depends on pass verification.
+
+### Feature DOCKS.md Is the Source of Truth
+
+Every visual or functional piece of the project has a DOCKS.md. This document defines:
+- **What**: exact deliverables
+- **Architecture**: component tree, data flow
+- **States**: all visual states the component can be in
+- **Animations**: exact spring parameters
+- **Files**: every file to create/modify
+- **Verification**: checklist of testable items on target device
+
+Code follows the doc. If something isn't in the DOCKS.md, it doesn't get built.
+
+### Build → Test → Connect (Step by Step)
+
+Don't build everything at once. Build each feature in isolation, verify it, THEN connect it to the next one.
 
 ```
-features/
-  F1-Auth/
-    Fa-Login/
-      TODO.md
-      DOCS.md
-    Fb-Sessions/
-      TODO.md
-      DOCS.md
-    Fc-OAuth/
-      TODO.md
-      DOCS.md
+DOCKS.md  →  AUDIT  →  BUILD  →  DEPLOY  →  TEST  →  VERIFIED
+                                                         │
+                                              ┌──────────┘
+                                              ▼
+                                         CONNECT to next feature
 ```
 
-Each sub-feature has its own `TODO.md`. The parent folder may have a `DOCS.md` overview.
-The AI proposes this structure proactively when a feature has too many unrelated tasks.
+**Phase 1 — Paper first.** Write the DOCKS.md for the feature. Define exactly what gets built, what files, what it depends on. No code.
 
-### Audit docs are OPTIONAL
+**Phase 2 — Audit the unknowns.** Run the 7-step AUDIT before touching code. Resolve every design question. Know exactly how it works before building.
 
-`predocs/` audit files (RFn-[Name]/ORIGINAL_F_IDEA.md, An-[Name].md) are NOT generated by default.
-Only create them if the user explicitly asks: "write up the audit" or "document the decision."
-The project works fine with just `features/`, `TODO.md`, and `CYCLES.md`.
+**Phase 3 — Build in isolation.** Write only the code for this one feature. Don't add voice mode if the feature is glass. Don't add Siri if the feature is a notch. Keep it self-contained.
+
+**Phase 4 — Deploy and test.** Build the .deb, install on device, check it works. Every checkbox in the DOCKS.md must pass. Nothing ships untested.
+
+**Phase 5 — Verify, then connect.** Only after the feature passes on device, connect it to the next feature. Connecting two broken pieces doesn't fix either one. Connect two verified pieces and you get a verified system.
+
+**Why this works:**
+- You always know what's broken — the feature you're building, not the whole system
+- Debugging is fast — one feature, few files, clear boundaries
+- Motivation stays high — each feature completes and visibly works
+- No backtracking — a verified feature stays verified; you build forward, never redo
+
+Each cycle groups one feature (or a group of parallel features). Features leave a cycle only when all verification items pass.
+
+```markdown
+# Cycle N — Feature Name
+**Start:** YYYY-MM-DD | **Target:** TBD | **Status:** pending/active/done
+
+## Features
+- FNN — status
+
+## Dependencies
+- Must complete after: FXX
+- Must complete before: FYY
+
+## Verification
+- [ ] device test
+- [ ] no regression in existing features
+- [ ] no crash
+```
+
+### Cycle 0 — Documentation Reorganization
+
+A special pre-code cycle. Runs ONCE at project start or after a major re-plan:
+1. Define all features (F01 through FNN)
+2. Write DOCKS.md for each feature
+3. Archive old docs to `features/_archive/`
+4. Update `features/DOCKS.md` index
+5. Update `CYCLES.md` with all cycles
+6. Update `AGENTS.md`
+
+No code is written in Cycle 0. Only documentation.
 
 ---
 
-## 4. CYCLES.md Structure
+## 5. The AUDIT Protocol
 
-CYCLES.md groups multiple features into **phases**. Each phase has one flat task checklist.
+Run BEFORE writing any code for a feature. Turns exploration into specification so implementation is mechanical, not experimental.
 
+### Step 1 — Read Everything
+The feature's DOCKS.md. All dependency feature DOCKS.md files. External references. STYLES.md. genesis/ docs.
+
+### Step 2 — Confirm Understanding
+Write a 3-line summary. User confirms it before proceeding.
+
+### Step 3 — 10 Questions, Debate Format
+Ask 10 sharp questions. Each must challenge an assumption or expose a gap. Debate until concrete. Examples:
+- "What happens if X happens during Y animation?"
+- "How does this survive an edge case like Z?"
+- "What's the fallback if W fails?"
+
+### Step 4 — Extract the UX Vision
+Describe exactly what the user sees and does. Every state, every transition. Pure experience, no implementation. Example:
 ```
-# CYCLES.md
-
-## Phase 1 — Foundation ✅ DONE
-**Features:** F1 (CLI), F3 (Browser)
-
-| # | Task | Status |
-|---|------|--------|
-| 1 | Cargo project setup, deps, module structure | ✅ |
-| 2 | Clap CLI: all subcommands + flags | ✅ |
-| 3 | Config load/save, setup command | ✅ |
-...
-
-## Phase 2 — Interface ⬜ NEXT
-**Features:** F2 (TUI), F4 (Mirror)
-
-| # | Task | Status |
-|---|------|--------|
-| 1 | Ratatui shell, raw mode, event loop | ⬜ |
-| 2 | Home screen: URL input, slash commands | ⬜ |
-...
-
-## Progress
-Phase 1 ██████████ 100% (9/9)
-Phase 2 ░░░░░░░░░░   0% (0/13)
+1. User sees a small pill at top center
+2. User taps it → expands with spring animation to 320×190pt
+3. Inside: content appears
+4. Tap outside → shrinks back
 ```
-
-**Rules:**
-- Phases group features. One phase = 1–4 related features.
-- Each phase has ONE flat numbered task list — not per-feature sections.
-- Tasks are checkmarks: `[x]` done, `[ ]` pending, `⬜` not started.
-- Build dependency graph at top shows what blocks what.
-- Progress bar per phase at bottom.
-- Update as tasks complete — don't batch.
-
----
-
-## 5. File Generation
-
-After AUDIT confirmed, AI creates. Remember: go big, user cuts, not you.
-
-```
-AGENTS.md              ← fill in Project Purpose
-TECHSTACK.md           ← recommended stack + reasoning
-CYCLES.md              ← phase structure + dependency graph (see Section 4)
-features/
-  F1-[Name]/
-    TODO.md            ← task list for feature 1
-    DOCS.md            ← empty wiki scaffold
-  ... (one folder per feature)
-```
-
-`DESIGN.md` and `BRAND.md` only if user mentions visual identity or ecosystem.
-
----
-
-## 6. The AUDIT Protocol
-
-Goal: transform a raw idea into a fully specified, maximally ambitious project.
-The AI recommends. The user decides. **AI never cuts first — the user cuts.**
-Go big. Go dangerous. The user tells you when to shrink.
-
-### Step 1 — Read the idea
-Read `ORIGINAL_IDEA.md` or what the user shared. Understand completely.
-
-### Step 2 — Confirm understanding
-```
-## What I think this is
-[2-3 sentence description]
-[The core problem it solves]
-[Who uses it and why]
-```
-If the user corrects, adjust immediately.
-
-### Step 3 — 10 questions, debate format
-
-**The 10 question topics are dynamic — not fixed.** The AI picks 10 of the most important topics
-for this specific project from the categories below. These are just a menu — pick what matters,
-skip what doesn't. No project needs all of them.
-
-**Topic menu** (pick 10 that apply):
-- **Tech stack** (language, framework, UI paradigm — CLI, TUI, web, GUI)
-- **Distribution** (package manager, binary, Docker, web)
-- **Storage** (file format, database, caching layer)
-- **Architecture** (monolith, microservices, plugin system)
-- **Auth** (none, API keys, OAuth, SSO)
-- **API** (REST, GraphQL, gRPC, or no API)
-- **Deployment** (self-hosted, cloud, edge)
-- **Monetization** (open core, SaaS, one-time purchase, free)
-- **Audience** (who is the end user — technical? casual? enterprise?)
-- **UX / Feeling** (extract the user's vision — see Step 4)
-- **Scope** (what is explicitly out of scope)
-- **Edge cases** (what scenarios does the user already know are dangerous)
-- **Growth** (how does this scale — 10 users or 10 million?)
-- **Lock-in** (proprietary format, vendor lock-in, or fully open)
-- **Integrations** (what does this connect to — Slack, GitHub, etc.)
-- **Compliance** (SOC2, GDPR, data residency)
-- **Onboarding** (how does a new user get their first win)
-
-For each chosen topic:
-1. AI states a recommendation with conviction + 2-3 sentence why
-2. AI asks 4 targeted sub-questions about that recommendation
-3. Always include `[Type your own answer]` option on every sub-question
-
-One question at a time. Wait for answer before next.
-User can skip all questions: "no questions, just do it."
-
-### Step 4 — Extract the UX vision
-
-The user is the creative brain. They already know what they want.
-The AI's job is to EXTRACT that vision, not to solicit open-ended brainstorming.
-
-Ask questions that pull out what the user already envisions:
-
-- "Walk me through the moment a user first opens this. What do they see? What do they do first?"
-- "You mentioned [specific scenario]. What's the exact sequence — I want to nail every step."
-- "What's the one detail you've been thinking about that most people would miss?"
-- "In your head, when this is done, what's the screenshot you'd put on the landing page?"
-
-Never ask:
-- "What should the feeling be?" (too vague)
-- "What's the vibe?" (lazy)
-- Open-ended "how should this work?" (the user isn't the architect — the AI is)
-
-Probe until the AI can describe the UX back to the user with enough detail
-that the user says "yes, exactly that."
 
 ### Step 5 — Diagrams
-If a diagram would clarify, ask the user to provide a `.png` in `predocs/`.
-AI reads diagrams as blueprints. AI cannot generate them.
+ASCII diagrams for state machine, animation timeline, component hierarchy, data flow.
 
-### Step 6 — 4 AI-approved additions
-AI proposes 4 things the user didn't mention but the AI approves of.
-Argue each: why it fits, what's the risk if skipped.
-User confirms or rejects each. Approved → features. Rejected → "V2 candidates."
+### Step 6 — 4 AI-Approved Additions
+Propose 4 improvements the user didn't ask for. They accept, reject, or modify each one.
 
-### Step 7 — Confirm and build
-User types "confirm" → AI generates the file structure and starts building.
-No formal audit file is written unless the user explicitly asks for it.
+### Step 7 — Confirm and Build
+User confirms audit. Write `FNN-AUDIT.md`. Then implement.
 
-**IMPORTANT: Skip the entire AUDIT if the user gives direct instructions.**
-If the user says "build X with Y and Z" — don't ask questions. Build it.
-The AUDIT is for when the user has a vague idea, not a concrete spec.
+### When to Skip the Audit
+- Bug fixes (no unknowns)
+- Small refactors (no new design decisions)
+- Simple sub-features fully specified in DOCKS.md
 
 ---
 
-## 7. Agent Behavior Rules
-
-These apply to every AI agent working in any repo using this system.
+## 6. Agent Behavior Rules
 
 ### Always
-- Read `AGENTS.md` first. Always. No exceptions.
-- Read the feature `TODO.md` before touching any feature code.
-- Read `CYCLES.md` to understand what phase is current and what's blocked.
-- Mark `[x]` in `TODO.md` as tasks complete. Do not batch.
-- Mark `[x]` in `CYCLES.md` as tasks complete.
-- Update `DOCS.md` when a feature is done.
-- Run the project's build command before marking anything done. Warnings OK. Errors not.
-- Be honest: `Code: Stub` compiles but does nothing. Only mark `Code: Working` if it works end-to-end.
+- Read all relevant DOCKS.md before any code
+- Verify on device, not just compile
+- Use existing patterns from the codebase
+- Follow STYLES.md conventions
+- Test on target hardware before closing any feature
 
 ### Never
-- Start a feature whose phase dependencies are not done (check `CYCLES.md`).
-- Edit `ORIGINAL_IDEA.md`. It is a permanent record.
-- Create files unless required by the task.
-- Mark a feature done without passing the build.
-- Ask the user open-ended architecture questions. Take a position first.
-- Cut scope or shrink features unprompted. The user decides what gets simplified.
+- Hardcode positions or dimensions
+- Mix languages where not allowed (e.g. no Swift in Theos .x files)
+- Use wrong animation types (e.g. no UIView.animate when CASpringAnimation is the standard)
+- Create custom windows when injection is the pattern
+- Add comments unless explicitly asked
+- Commit secrets or keys
+- Create .md files outside features/, genesis/, or root
 
 ### When Stuck
-1. Set `<!-- STATUS: blocked -->` in the feature's `TODO.md`
-2. Write the reason and what is needed to unblock
-3. Update `CYCLES.md` status
-4. Move to the next unblocked feature
+- Check reference code for patterns
+- Verify with compiler
+- Read genesis/ docs for original intent
+- Ask user before making architecture choices
+- Never guess — if DOCKS.md doesn't say, ask
 
 ---
 
-## 8. Status Vocabulary
+## 7. Status Vocabulary
 
-| String | Meaning |
-|--------|---------|
-| `Code: Working` | Core functionality runs end-to-end |
-| `Code: Stub` | Exists, compiles, does nothing real |
-| `Designed` | DOCS.md + TODO.md written, zero code |
-| `Conceptual` | Discussed in AUDIT, no files yet |
-| `Not started` | Known gap, never discussed |
-| `Blocked` | Cannot proceed — dependency unresolved |
-| `Done` | All tasks complete, build passes, DOCS.md written |
+| Term | Meaning |
+|---|---|
+| `pending` | Not started, waiting for dependency completion |
+| `in_progress` | Currently being built |
+| `blocked` | Can't continue — needs user decision or dependency |
+| `ready_for_review` | Code written, needs device verification |
+| `verified` | Tested on target hardware, works correctly |
+| `done` | Complete, closed, no further work |
 
 ---
 
-*Copy this file to any repo. It works as-is.*
-*The only project-specific content is the top section (Project Purpose, Tech Stack, Health).*
+## 8. Prompt Chaining for Multi-Agent Work
+
+For features too big for one session, break into sequential phases. Each phase = one prompt file.
+
+### File Location
+```
+prompts/
+  F01-phase-1-description.md
+  F01-phase-2-description.md
+```
+
+### Naming
+`{feature-code}-phase-{N}-{short-title}.md`
+
+### Prompt Format (Every Phase Must Follow)
+```markdown
+# Phase {N} of {FeatureCode} — {Short Title}
+
+## Context
+What we are building and why. 3 lines max.
+
+## What You Need to Read First
+- features/FXX-xxx/DOCKS.md
+- path/to/existing/file.ext (line X-Y)
+
+## Codebase Learnings
+Relevant patterns from existing code.
+
+## What to Build
+- Task 1: description
+- Task 2: description
+
+## Files to Create/Modify
+- create: path/to/new/file.ext
+- modify: path/to/existing/file.ext
+
+## Verification
+- [ ] compiles without errors
+- [ ] deploys to target
+- [ ] visible behavior matches spec
+- [ ] no crash
+
+## When You Finish
+Report what was built, what was verified, and any issues found.
+```
+
+### Rules
+- Each phase completable in one session
+- Sequential — phase 2 only after phase 1 verified
+- No unrelated features combined in one phase
+- Every phase ends with device verification
+
+---
+
+## 9. The Revolution Protocol
+
+For major architecture changes affecting multiple features. NOT for adding features, bug fixes, or small refactors.
+
+### Step 1 — User Writes the Revolution Document
+```markdown
+# Revolution: [Name] — [Colossality Rating]
+## Why This Revolution
+## What Changes
+## Migration Path
+## Affected Features
+## Architecture Decisions
+## Risk Assessment
+```
+
+### Step 2 — AI Reads and Understands
+Read every affected feature's DOCKS.md. Map all files that will change.
+
+### Step 3 — AI Delivers Impact Assessment
+
+#### Colossality Rating
+| Rating | Scope |
+|---|---|
+| MINOR | Affects one sub-feature |
+| MODERATE | Affects one feature |
+| MAJOR | Affects 2-3 features |
+| COLOSSAL | Affects 4+ features or fundamental architecture |
+
+#### Impact Report
+Every changed file. Every deleted file. Every new file.
+
+### Step 4 — Negotiation
+User modifies, rejects, or accepts.
+
+### Step 5 — Initialize
+Create new folders. Migrate affected DOCKS.md files. Update indexes. Archive old structure.
+
+---
+
+## 10. File Generation Rules
+
+### Never Create
+- README files
+- CHANGELOG files
+- .md files outside features/, genesis/, or root
+- Documentation inside source directories
+
+### Always Create
+- `features/FNN-name/DOCKS.md` for every feature
+- `features/FNN-name/FNN-X-sub/DOCKS.md` for every sub-feature
+- Update AGENTS.md / CYCLES.md when adding features

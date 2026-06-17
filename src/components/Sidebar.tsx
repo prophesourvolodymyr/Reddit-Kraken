@@ -594,20 +594,28 @@ export default function Sidebar({
           title="For You"
           aria-label="Open For You home feed"
         >
-          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
             <path
-              d="M8.2 20.4c-.5-1.2-.7-2.4-.7-3.8 0-5 3.4-8.6 7.5-8.6s7.5 3.6 7.5 8.6c0 1.4-.2 2.6-.7 3.8-1.1-.9-3.5-1.6-6.8-1.6s-5.7.7-6.8 1.6Z"
+              d="M14 22c-1.5 0-2.8-.4-3.8-1 .5-.6 1.5-1 3.8-1s3.3.4 3.8 1c-1 .6-2.3 1-3.8 1Z"
               fill="currentColor"
+              opacity="0.7"
+            />
+            <ellipse cx="14" cy="11" rx="5" ry="6.5" fill="currentColor" />
+            <circle cx="11.5" cy="10.5" r="1.2" fill="#1a1a1a" />
+            <circle cx="16.5" cy="10.5" r="1.2" fill="#1a1a1a" />
+            <path
+              d="M8 12c-1.5-.2-2.5-1-2.5-2.5C5.5 8 6.5 7 8 6.5M20 12c1.5-.2 2.5-1 2.5-2.5 0-1.5-1-2.5-2.5-3"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
             />
             <path
-              d="M8.6 20c-1.9-.3-3.1-1.4-3.1-3 0-1.3.8-2.4 2.1-2.8M21.4 20c1.9-.3 3.1-1.4 3.1-3 0-1.3-.8-2.4-2.1-2.8"
-              fill="none"
+              d="M6 16c-.5.3-1 .5-1.5.7M22 16c.5.3 1 .5 1.5.7M5 20c-.5.3-.8.6-1 .9M23 20c.5.3.8.6 1 .9"
               stroke="currentColor"
+              strokeWidth="1.2"
               strokeLinecap="round"
-              strokeWidth="2.2"
+              opacity="0.4"
             />
-            <circle cx="12.1" cy="15.8" r="1.4" fill="#000000" />
-            <circle cx="17.9" cy="15.8" r="1.4" fill="#000000" />
           </svg>
           {renderBadge(homeUnread)}
         </button>
@@ -621,10 +629,15 @@ export default function Sidebar({
   return (
     <aside
       ref={sidebarRef}
-      className="relative flex w-[84px] shrink-0 flex-col items-center gap-2 overflow-visible bg-black px-2 py-3 text-white"
+      className="relative flex w-[68px] sm:w-[84px] shrink-0 flex-col items-center gap-2 overflow-visible bg-black px-2 pt-8 pb-3 text-white"
     >
       {renderHomeButton()}
       <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-y-auto overscroll-contain pr-2">
+        {items.length === 0 && (
+          <p className="text-[10px] text-white/40 text-center leading-tight px-1 mb-2">
+            No subreddits yet
+          </p>
+        )}
         {items.map((item, i) => renderItem(item, [i]))}
         <div
           data-drop-path={rootEndPath.join(",")}
@@ -640,7 +653,11 @@ export default function Sidebar({
         />
         <button
           onClick={onAddSub}
-          className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-[30%] border-2 border-dashed border-white/20 text-white/55 transition-all duration-200 hover:border-white/70 hover:bg-white/10 hover:text-white"
+          className={`flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-[30%] border-2 border-dashed text-white/55 transition-all duration-200 hover:border-white/70 hover:bg-white/10 hover:text-white ${
+            items.length === 0
+              ? "border-white/40 animate-pulse"
+              : "border-white/20"
+          }`}
           title="Add subreddit"
         >
           <svg

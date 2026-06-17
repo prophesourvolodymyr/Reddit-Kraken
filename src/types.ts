@@ -9,6 +9,10 @@ export interface Subreddit {
   has_new: boolean;
   unread_count?: number;
   accent_color?: string;
+  description?: string;
+  subscribers?: number;
+  created_utc?: number;
+  banner_url?: string | null;
 }
 
 export type SidebarItem =
@@ -28,6 +32,7 @@ export interface Post {
   body: string | null;
   author: string;
   url: string | null;
+  thumbnail_url: string | null;
   score: number;
   num_comments: number;
   created_utc: number;
@@ -35,18 +40,18 @@ export interface Post {
   over_18: boolean;
   spoiler: boolean;
   fetched_at: string;
-  status: PostStatus;
-  relevance_score: number;
+  seen: boolean;
+  saved: boolean;
+  worth_responding: boolean;
+  ai_reason: string | null;
+  archived: boolean;
 }
 
-export type PostStatus =
-  | "new"
-  | "analyzed"
-  | "reviewed"
-  | "drafted"
-  | "responded"
-  | "dismissed"
-  | "archived";
+export interface DigestGroup {
+  date_label: string;
+  subreddit: string;
+  posts: Post[];
+}
 
 export interface Comment {
   id: string;
@@ -69,7 +74,8 @@ export interface Message {
   direction: "inbox" | "sent";
 }
 
-export type ViewType = "general" | "filter" | "ai-respond" | "inbox" | "detail";
+export type ViewType = "for-you" | "general";
+export type PostViewMode = "compact" | "card";
 
 export interface Analysis {
   score: number;
@@ -113,4 +119,11 @@ export interface LlmProviderTestResult {
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;
+}
+
+export interface RedditStatus {
+  connected: boolean;
+  username: string | null;
+  token_expires_at: number | null;
+  auth_mode: string | null;
 }
