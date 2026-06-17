@@ -334,6 +334,7 @@ impl RedditClient {
             selftext: Option<String>,
             author: String,
             url: Option<String>,
+            thumbnail: Option<String>,
             score: i32,
             num_comments: i32,
             created_utc: f64,
@@ -356,6 +357,7 @@ impl RedditClient {
                 body: child.data.selftext,
                 author: child.data.author,
                 url: child.data.url,
+                thumbnail_url: child.data.thumbnail.filter(|t| t.starts_with("http")),
                 score: child.data.score,
                 num_comments: child.data.num_comments,
                 created_utc: child.data.created_utc,
@@ -467,5 +469,56 @@ impl RedditClient {
             .collect();
 
         Ok(subs)
+    }
+
+    pub fn fetch_comments(&self, post_id: &str) -> Result<Vec<crate::models::Comment>, AppError> {
+        let article = post_id.strip_prefix("t3_").unwrap_or(post_id);
+
+        #[derive(serde::Deserialize)]
+        struct CommentListing {
+            data: CommentListingData,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct CommentListingData {
+            children: Vec<CommentChild>,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct CommentChild {
+            data: RawComment,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct RawComment {
+            id: String,
+            parent_id: Option<String>,
+            author: Option<String>,
+            body: Option<String>,
+            score: i32,
+            created_utc: f64,
+        }
+
+        let response: Vec<CommentListing> = self
+            .reddit_get(&format!("/comments/{}.json?limit=50&depth=2", article))?;
+
+        let comments = response
+            .into_iter()
+            .skip(1)
+            .flat_map(|listing| listing.data.children)
+            .filter(|child| child.data.author.is_some())
+            .map(|child| crate::models::Comment {
+                id: format!("t1_{}", child.data.id),
+                post_id: post_id.to_string(),
+                parent_id: child.data.parent_id,
+                author: child.data.author.unwrap_or_else(|| "[deleted]".to_string()),
+                body: child.data.body.unwrap_or_else(|| "[deleted]".to_string()),
+                score: child.data.score,
+                created_utc: child.data.created_utc,
+                fetched_at: chrono::Utc::now().to_rfc3339(),
+            })
+            .collect();
+
+        Ok(comments)
     }
 }

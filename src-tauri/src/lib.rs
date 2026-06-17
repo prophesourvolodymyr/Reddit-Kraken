@@ -6,7 +6,7 @@ mod reddit_api;
 mod scheduler;
 
 use db::Database;
-use models::{DigestGroup, Post, PostDetail, RecoveryInfo, RedditStatus, Subreddit};
+use models::{Comment, DigestGroup, Post, PostDetail, RecoveryInfo, RedditStatus, Subreddit};
 use reddit_api::RedditClient;
 use rusqlite::params;
 use scheduler::Scheduler;
@@ -213,13 +213,13 @@ fn fetch_posts_live(
                     let conn = state.db.conn.lock().map_err(|e| e.to_string())?;
                     for post in &fresh {
                         let _ = conn.execute(
-                            "INSERT OR IGNORE INTO posts (id, subreddit_id, title, body, author, url, score, num_comments, created_utc, flair_text, over_18, spoiler, fetched_at)
-                             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                            "INSERT OR IGNORE INTO posts (id, subreddit_id, title, body, author, url, score, num_comments, created_utc, flair_text, over_18, spoiler, fetched_at, thumbnail_url)
+                             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
                             params![
                                 post.id, post.subreddit_id, post.title, post.body,
                                 post.author, post.url, post.score, post.num_comments,
                                 post.created_utc, post.flair_text,
-                                post.over_18 as i32, post.spoiler as i32, post.fetched_at,
+                                post.over_18 as i32, post.spoiler as i32, post.fetched_at, post.thumbnail_url,
                             ],
                         );
                     }
@@ -300,6 +300,7 @@ fn get_posts_inner(
                 worth_responding: row.get::<_, i32>(15)? != 0,
                 ai_reason: row.get(16)?,
                 archived: row.get::<_, i32>(17)? != 0,
+                thumbnail_url: row.get(18)?,
             })
         })
         .map_err(|e| e.to_string())?
@@ -355,13 +356,13 @@ fn fetch_posts_live_inner(state: &State<AppState>, subreddit_id: &Option<String>
                     if let Ok(conn) = state.db.conn.lock() {
                         for post in &fresh {
                             let _ = conn.execute(
-                                "INSERT OR IGNORE INTO posts (id, subreddit_id, title, body, author, url, score, num_comments, created_utc, flair_text, over_18, spoiler, fetched_at)
-                                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                                "INSERT OR IGNORE INTO posts (id, subreddit_id, title, body, author, url, score, num_comments, created_utc, flair_text, over_18, spoiler, fetched_at, thumbnail_url)
+                                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
                                 params![
                                     post.id, post.subreddit_id, post.title, post.body,
                                     post.author, post.url, post.score, post.num_comments,
                                     post.created_utc, post.flair_text,
-                                    post.over_18 as i32, post.spoiler as i32, post.fetched_at,
+                                    post.over_18 as i32, post.spoiler as i32, post.fetched_at, post.thumbnail_url,
                                 ],
                             );
                         }
@@ -404,12 +405,28 @@ fn get_post_detail(state: State<AppState>, post_id: String) -> Result<PostDetail
                     worth_responding: row.get::<_, i32>(15)? != 0,
                     ai_reason: row.get(16)?,
                     archived: row.get::<_, i32>(17)? != 0,
+                thumbnail_url: row.get(18)?,
                 })
             },
         )
         .map_err(|e| e.to_string())?;
 
-    Ok(PostDetail { post })
+    let comments = {
+        let client_guard = state.reddit_client.lock().map_err(|e| e.to_string())?;
+        if let Some(ref client) = *client_guard {
+            match client.fetch_comments(&post_id) {
+                Ok(c) => c,
+                Err(e) => {
+                    eprintln!("[comments] Failed to fetch: {}", e);
+                    vec![]
+                }
+            }
+        } else {
+            vec![]
+        }
+    };
+
+    Ok(PostDetail { post, comments })
 }
 
 #[tauri::command]
@@ -447,6 +464,7 @@ fn get_worth_responding_posts(state: State<AppState>) -> Result<Vec<Post>, Strin
                 worth_responding: row.get::<_, i32>(15)? != 0,
                 ai_reason: row.get(16)?,
                 archived: row.get::<_, i32>(17)? != 0,
+                thumbnail_url: row.get(18)?,
             })
         })
         .map_err(|e| e.to_string())?
@@ -491,6 +509,7 @@ fn get_digested_posts(state: State<AppState>) -> Result<Vec<DigestGroup>, String
                 worth_responding: row.get::<_, i32>(15)? != 0,
                 ai_reason: row.get(16)?,
                 archived: row.get::<_, i32>(17)? != 0,
+                thumbnail_url: row.get(18)?,
             })
         })
         .map_err(|e| e.to_string())?

@@ -4,33 +4,13 @@ import { Post, Comment } from "../types";
 
 interface PostDetailProps {
   post: Post;
+  comments: Comment[];
   onBack: () => void;
 }
 
 interface CommentNode extends Comment {
   children: CommentNode[];
 }
-
-const demoComments: Comment[] = [
-  {
-    id: "c1", post_id: "p1", parent_id: null, author: "dev_user", body: "This is exactly what I needed! The useSyncExternalStore pattern is so much cleaner for this use case.", score: 42, created_utc: Date.now() / 1000 - 1800, fetched_at: "",
-  },
-  {
-    id: "c2", post_id: "p1", parent_id: "c1", author: "react_fan", body: "Agreed. The main advantage is that it prevents tearing when multiple components read the same external store.", score: 18, created_utc: Date.now() / 1000 - 1200, fetched_at: "",
-  },
-  {
-    id: "c3", post_id: "p1", parent_id: "c2", author: "dev_user", body: "Exactly! And it works great with Zustand and other external stores.", score: 8, created_utc: Date.now() / 1000 - 600, fetched_at: "",
-  },
-  {
-    id: "c4", post_id: "p1", parent_id: null, author: "skeptic_dev", body: "I still think useEffect is fine for most cases. This feels like over-engineering for simple scenarios.", score: -3, created_utc: Date.now() / 1000 - 900, fetched_at: "",
-  },
-  {
-    id: "c5", post_id: "p1", parent_id: "c4", author: "senior_eng", body: "It depends on your use case. If you're dealing with external stores that update outside React's render cycle, useSyncExternalStore is the right tool.", score: 24, created_utc: Date.now() / 1000 - 300, fetched_at: "",
-  },
-  {
-    id: "c6", post_id: "p1", parent_id: null, author: "newbie_js", body: "Can someone explain what 'tearing' means in this context? I keep seeing this term but don't fully understand it.", score: 15, created_utc: Date.now() / 1000 - 45, fetched_at: "",
-  },
-];
 
 function getTimeAgo(utc: number): string {
   const now = Date.now() / 1000;
@@ -106,12 +86,12 @@ function CommentItem({ comment, depth = 0 }: { comment: CommentNode; depth?: num
   );
 }
 
-export default function PostDetail({ post, onBack }: PostDetailProps) {
+export default function PostDetail({ post, comments, onBack }: PostDetailProps) {
   const [vote, setVote] = useState<0 | 1 | -1>(0);
   const [replyText, setReplyText] = useState("");
   const [showReply, setShowReply] = useState(false);
   const [copied, setCopied] = useState(false);
-  const commentTree = buildCommentTree(demoComments) as CommentNode[];
+  const commentTree = buildCommentTree(comments);
   const score = post.score + vote;
   const timeAgo = getTimeAgo(post.created_utc);
 

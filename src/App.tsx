@@ -11,13 +11,14 @@ import SettingsPanel from "./components/SettingsPanel";
 import InboxView from "./components/InboxView";
 import SearchBar from "./components/SearchBar";
 import AddSubredditModal from "./components/AddSubredditModal";
-import { Subreddit, Post, ViewType, SidebarItem, PostViewMode } from "./types";
+import { Subreddit, Post, ViewType, SidebarItem, PostViewMode, Comment } from "./types";
 
 export default function App() {
   const [sidebarItems, setSidebarItems] = useState<SidebarItem[]>([]);
   const [activeSub, setActiveSub] = useState<Subreddit | null>(null);
   const [activeView, setActiveView] = useState<ViewType>("for-you");
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [postComments, setPostComments] = useState<Comment[]>([]);
   const [showNewPost, setShowNewPost] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -243,12 +244,22 @@ export default function App() {
     setSelectedPost(null);
   };
 
-  const handlePostClick = (post: Post) => {
+  const handlePostClick = async (post: Post) => {
     setSelectedPost(post);
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const detail = await invoke<{ post: Post; comments: Comment[] }>("get_post_detail", {
+        postId: post.id,
+      });
+      setPostComments(detail.comments);
+    } catch {
+      setPostComments([]);
+    }
   };
 
   const handleBack = () => {
     setSelectedPost(null);
+    setPostComments([]);
   };
 
   const handleAddSub = () => {
@@ -337,7 +348,7 @@ export default function App() {
                   {showInbox ? (
                     <InboxView />
                   ) : selectedPost ? (
-                    <PostDetail post={selectedPost} onBack={handleBack} />
+                    <PostDetail post={selectedPost} comments={postComments} onBack={handleBack} />
                   ) : (
                     <PostList
                       activeSub={activeSub}

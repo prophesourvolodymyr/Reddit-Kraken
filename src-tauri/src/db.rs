@@ -57,7 +57,8 @@ impl Database {
                 saved INTEGER DEFAULT 0,
                 worth_responding INTEGER DEFAULT 0,
                 ai_reason TEXT,
-                archived INTEGER DEFAULT 0
+                archived INTEGER DEFAULT 0,
+                thumbnail_url TEXT
             );
 
             CREATE TABLE IF NOT EXISTS comments (
@@ -105,6 +106,7 @@ impl Database {
         let _ = conn.execute("ALTER TABLE subreddits ADD COLUMN subscribers INTEGER", []);
         let _ = conn.execute("ALTER TABLE subreddits ADD COLUMN created_utc REAL", []);
         let _ = conn.execute("ALTER TABLE subreddits ADD COLUMN banner_url TEXT", []);
+        let _ = conn.execute("ALTER TABLE posts ADD COLUMN thumbnail_url TEXT", []);
 
         Ok(())
     }

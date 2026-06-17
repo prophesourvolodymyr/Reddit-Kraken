@@ -46,6 +46,7 @@ pub struct Post {
     pub body: Option<String>,
     pub author: String,
     pub url: Option<String>,
+    pub thumbnail_url: Option<String>,
     pub score: i32,
     pub num_comments: i32,
     pub created_utc: f64,
@@ -63,6 +64,7 @@ pub struct Post {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostDetail {
     pub post: Post,
+    pub comments: Vec<Comment>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
