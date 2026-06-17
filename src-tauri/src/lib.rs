@@ -176,8 +176,62 @@ fn remove_subreddit(state: State<AppState>, id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn get_posts(
+fn fetch_posts_live(
     state: State<AppState>,
+    subreddit_id: Option<String>,
+) -> Result<Vec<Post>, String> {
+    let client = {
+        let guard = state.reddit_client.lock().map_err(|e| e.to_string())?;
+        guard.as_ref().ok_or("Reddit not connected")?.clone()
+    };
+
+    if let Some(ref sub_id) = subreddit_id {
+        let conn = state.db.conn.lock().map_err(|e| e.to_string())?;
+        let name: Option<String> = conn
+            .query_row(
+                "SELECT name FROM subreddits WHERE id = ?1",
+                params![sub_id],
+                |row| row.get(0),
+            )
+            .ok();
+        let existing_count: i32 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM posts WHERE subreddit_id = ?1",
+                params![sub_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+        drop(conn);
+
+        if let Some(sub_name) = name {
+            if existing_count < 10 {
+                match client.fetch_posts(&sub_name) {
+                    Ok(fresh) => {
+                        let conn = state.db.conn.lock().map_err(|e| e.to_string())?;
+                        for post in &fresh {
+                            let _ = conn.execute(
+                                "INSERT OR IGNORE INTO posts (id, subreddit_id, title, body, author, url, score, num_comments, created_utc, flair_text, over_18, spoiler, fetched_at)
+                                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                                params![
+                                    post.id, post.subreddit_id, post.title, post.body,
+                                    post.author, post.url, post.score, post.num_comments,
+                                    post.created_utc, post.flair_text,
+                                    post.over_18 as i32, post.spoiler as i32, post.fetched_at,
+                                ],
+                            );
+                        }
+                    }
+                    Err(e) => eprintln!("Live fetch failed for r/{}: {}", sub_name, e),
+                }
+            }
+        }
+    }
+
+    get_posts_inner(&state, subreddit_id, 50, 0)
+}
+
+fn get_posts_inner(
+    state: &State<AppState>,
     subreddit_id: Option<String>,
     limit: u32,
     offset: u32,
@@ -247,6 +301,16 @@ fn get_posts(
         .collect();
 
     Ok(posts)
+}
+
+#[tauri::command]
+fn get_posts(
+    state: State<AppState>,
+    subreddit_id: Option<String>,
+    limit: u32,
+    offset: u32,
+) -> Result<Vec<Post>, String> {
+    get_posts_inner(&state, subreddit_id, limit, offset)
 }
 
 #[tauri::command]
@@ -1176,6 +1240,7 @@ pub fn run() {
             add_subreddit,
             remove_subreddit,
             get_posts,
+            fetch_posts_live,
             get_post_detail,
             get_worth_responding_posts,
             get_digested_posts,

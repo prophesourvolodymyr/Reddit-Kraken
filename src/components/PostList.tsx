@@ -172,10 +172,9 @@ export default function PostList({
     setLoadState("loading");
     try {
       const { invoke } = await import("@tauri-apps/api/core");
-      const result = await invoke<Post[]>("get_posts", {
+      const command = isRedditConnected ? "fetch_posts_live" : "get_posts";
+      const result = await invoke<Post[]>(command, {
         subredditId: activeSub?.id ?? null,
-        limit: 50,
-        offset: 0,
       });
       if (result.length > 0) {
         setPosts(result);
