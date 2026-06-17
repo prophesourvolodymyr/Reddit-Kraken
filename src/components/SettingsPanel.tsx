@@ -36,6 +36,7 @@ interface RedditAccountFormState {
   username: string;
   password: string;
   token_v2: string;
+  session_cookie: string;
 }
 
 const emptyForm = (): ProviderFormState => ({
@@ -54,6 +55,7 @@ const emptyRedditForm = (): RedditAccountFormState => ({
   username: "",
   password: "",
   token_v2: "",
+  session_cookie: "",
 });
 
 export default function SettingsPanel({ onClose }: SettingsPanelProps) {
@@ -217,6 +219,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
         result = await invoke<string>("configure_manual_token", {
           tokenV2: redditForm.token_v2,
           username: redditForm.username || "unknown",
+          sessionCookie: redditForm.session_cookie || null,
         });
       } else {
         result = await invoke<string>("configure_reddit_auth", {
@@ -761,16 +764,44 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                   </div>
 
                   {redditAuthMode === "manual" ? (
-                    <div className="rounded-2xl border border-border bg-background p-4 text-xs text-muted-foreground">
-                      <p className="font-semibold mb-1">Manual Token — fastest way in</p>
-                      <p className="mb-2">
-                        Copy your <code className="bg-secondary px-1 rounded">token_v2</code> cookie from the browser. No password needed.
-                      </p>
-                      <p className="mb-2">
-                        DevTools → Application → Cookies → reddit.com → copy <strong>token_v2</strong>
-                      </p>
-                      <p>Token lasts ~24 hours. Re-paste when it expires.</p>
-                    </div>
+                    <>
+                      <div className="rounded-2xl border border-border bg-background p-4 text-xs text-muted-foreground">
+                        <p className="font-semibold mb-1">Manual Token — fastest way in</p>
+                        <p className="mb-2">
+                          Copy <code className="bg-secondary px-1 rounded">token_v2</code> from browser cookies.
+                          DevTools → Application → Cookies → reddit.com.
+                        </p>
+                        <p>Token lasts ~24h. Add session cookie below for auto-refresh.</p>
+                      </div>
+                      <label className="block space-y-2">
+                        <span className="text-sm font-semibold">token_v2</span>
+                        <textarea
+                          value={redditForm.token_v2}
+                          onChange={(event) =>
+                            setRedditForm((prev) => ({ ...prev, token_v2: event.target.value }))
+                          }
+                          className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-xs outline-none focus:border-foreground resize-none font-mono"
+                          placeholder="eyJhbGciOiJSUzI1NiIs..."
+                          rows={3}
+                        />
+                      </label>
+                      <label className="block space-y-2">
+                        <span className="text-sm font-semibold">reddit_session (optional — for auto-refresh)</span>
+                        <textarea
+                          value={redditForm.session_cookie}
+                          onChange={(event) =>
+                            setRedditForm((prev) => ({ ...prev, session_cookie: event.target.value }))
+                          }
+                          className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-xs outline-none focus:border-foreground resize-none font-mono"
+                          placeholder="eyJhbGciOiJSUzI1NiIs..."
+                          rows={3}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Paste <code className="bg-secondary px-1 rounded">reddit_session</code> from the same cookie list.
+                          With this, the app auto-refreshes token_v2 every ~23h for ~180 days.
+                        </p>
+                      </label>
+                    </>
                   ) : redditAuthMode === "session" ? (
                     <div className="rounded-2xl border border-border bg-background p-4 text-xs text-muted-foreground">
                       <p className="font-semibold mb-1">Browser Session — no app registration needed</p>

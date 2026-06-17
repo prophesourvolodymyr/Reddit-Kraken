@@ -1072,8 +1072,13 @@ fn configure_manual_token(
     state: State<AppState>,
     token_v2: String,
     username: String,
+    session_cookie: Option<String>,
 ) -> Result<String, String> {
-    let client = RedditClient::new_with_token(token_v2);
+    let client = RedditClient::new_with_token(token_v2.clone());
+
+    if let Some(ref session) = session_cookie {
+        client.set_session_cookie(session.clone());
+    }
 
     
     let me = client.ping()
@@ -1082,6 +1087,14 @@ fn configure_manual_token(
     let encrypted_username = encrypt_api_key(&username)?;
     state.db.set_auth("reddit_username", &encrypted_username).map_err(|e| e.to_string())?;
     state.db.set_auth("reddit_auth_mode", "manual").map_err(|e| e.to_string())?;
+
+    let encrypted_token = encrypt_api_key(&token_v2)?;
+    state.db.set_auth("reddit_token_v2", &encrypted_token).map_err(|e| e.to_string())?;
+
+    if let Some(ref session) = session_cookie {
+        let encrypted_session = encrypt_api_key(session)?;
+        state.db.set_auth("reddit_session_cookie", &encrypted_session).map_err(|e| e.to_string())?;
+    }
 
     let client_arc = Arc::new(client);
     *state.reddit_client.lock().map_err(|e| e.to_string())? = Some(client_arc.clone());
@@ -1363,7 +1376,26 @@ pub fn run() {
 
                 if has_username && has_password {
                     let mode = auth_mode.unwrap_or_else(|| "oauth".to_string());
-                    if mode == "session" || !has_oauth {
+                    if mode == "manual" {
+                        if let Ok(Some(enc_token)) = state.db.get_auth("reddit_token_v2") {
+                            if let Ok(token_v2) = decrypt_api_key(&enc_token) {
+                                println!("[startup] Restoring manual token...");
+                                let client = RedditClient::new_with_token(token_v2);
+                                if let Ok(Some(enc_session)) = state.db.get_auth("reddit_session_cookie") {
+                                    if let Ok(session_cookie) = decrypt_api_key(&enc_session) {
+                                        client.set_session_cookie(session_cookie);
+                                        println!("[startup] Session cookie for auto-refresh restored");
+                                    }
+                                }
+                                if let Ok(me) = client.ping() {
+                                    println!("[startup] Reconnected as u/{} via manual token", me);
+                                    let client_arc = Arc::new(client);
+                                    *state.reddit_client.lock().unwrap() = Some(client_arc.clone());
+                                    let _ = start_scheduler_inner(&state, client_arc);
+                                }
+                            }
+                        }
+                    } else if mode == "session" || !has_oauth {
                         // Session or manual mode — just need username/password or token manually
                     } else {
                         // OAuth mode — need all 4

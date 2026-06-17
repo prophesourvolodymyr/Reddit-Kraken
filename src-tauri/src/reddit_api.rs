@@ -34,6 +34,7 @@ pub struct RedditClient {
     client_secret: String,
     username: String,
     password: String,
+    session_for_refresh: Mutex<Option<String>>,
     request_timestamps: Mutex<Vec<Instant>>,
     max_requests_per_minute: usize,
 }
@@ -53,6 +54,7 @@ impl RedditClient {
             client_secret,
             username,
             password,
+            session_for_refresh: Mutex::new(None),
             request_timestamps: Mutex::new(Vec::new()),
             max_requests_per_minute: 60,
         }
@@ -67,6 +69,7 @@ impl RedditClient {
             client_secret: String::new(),
             username,
             password,
+            session_for_refresh: Mutex::new(None),
             request_timestamps: Mutex::new(Vec::new()),
             max_requests_per_minute: 60,
         }
@@ -88,6 +91,7 @@ impl RedditClient {
             client_secret: String::new(),
             username: String::new(),
             password: String::new(),
+            session_for_refresh: Mutex::new(None),
             request_timestamps: Mutex::new(Vec::new()),
             max_requests_per_minute: 60,
         }
@@ -223,12 +227,36 @@ impl RedditClient {
         let needs_refresh = {
             let tokens = self.tokens.lock().unwrap();
             tokens.as_ref().map_or(true, |t| {
-                chrono::Utc::now().timestamp() >= t.expires_at - 60
+                chrono::Utc::now().timestamp() >= t.expires_at - 3600
             })
         };
 
-        if needs_refresh && self.auth_mode != AuthMode::ManualToken {
-            self.authenticate()?;
+        if needs_refresh {
+            if self.auth_mode == AuthMode::ManualToken {
+                if let Ok(Some(session)) = self.session_for_refresh.lock()
+                    .map(|g| g.clone())
+                {
+                    println!("[auth] Token expiring, refreshing via session cookie...");
+                    match self.refresh_via_session(&session) {
+                        Ok(new_token) => {
+                            println!("[auth] Token refreshed successfully");
+                            let expires_at = chrono::Utc::now().timestamp() + 82800;
+                            let mut tokens = self.tokens.lock().unwrap();
+                            *tokens = Some(AuthTokens {
+                                access_token: new_token,
+                                refresh_token: None,
+                                expires_at,
+                                username: tokens.as_ref().and_then(|t| {
+                                    if t.username.is_empty() { None } else { Some(t.username.clone()) }
+                                }).unwrap_or_default(),
+                            });
+                        }
+                        Err(e) => eprintln!("[auth] Token refresh failed: {}", e),
+                    }
+                }
+            } else {
+                self.authenticate()?;
+            }
         }
 
         let tokens = self.tokens.lock().unwrap();
@@ -236,6 +264,37 @@ impl RedditClient {
             .as_ref()
             .map(|t| t.access_token.clone())
             .ok_or_else(|| AppError::Auth("No valid token".into()))
+    }
+
+    fn refresh_via_session(&self, session_cookie: &str) -> Result<String, AppError> {
+        let response = self.client
+            .get(REDDIT_BASE)
+            .header("User-Agent", USER_AGENT)
+            .header("Cookie", format!("reddit_session={}", session_cookie))
+            .send()?;
+
+        let new_token = response
+            .headers()
+            .get_all("set-cookie")
+            .iter()
+            .filter_map(|v| v.to_str().ok())
+            .find_map(|cookie_str| {
+                if cookie_str.starts_with("token_v2=") {
+                    cookie_str.split(';').next().map(|c| {
+                        c.strip_prefix("token_v2=").unwrap_or("").to_string()
+                    })
+                } else {
+                    None
+                }
+            });
+
+        new_token.ok_or_else(|| {
+            AppError::Auth("Failed to extract token_v2 from session refresh".into())
+        })
+    }
+
+    pub fn set_session_cookie(&self, cookie: String) {
+        *self.session_for_refresh.lock().unwrap() = Some(cookie);
     }
 
     fn check_rate_limit(&self) -> Result<(), AppError> {
