@@ -1335,6 +1335,48 @@ pub fn run() {
                 )
                 .ok();
 
+            let auth_mode = state.db.get_auth("reddit_auth_mode").unwrap_or(None);
+            if auth_mode.is_some() {
+                println!("[startup] Found stored auth, attempting reconnect...");
+                let has_oauth = state.db.get_auth("reddit_client_id").unwrap_or(None).is_some();
+                let has_username = state.db.get_auth("reddit_username").unwrap_or(None).is_some();
+                let has_password = state.db.get_auth("reddit_password").unwrap_or(None).is_some();
+
+                if has_username && has_password {
+                    let mode = auth_mode.unwrap_or_else(|| "oauth".to_string());
+                    if mode == "session" || !has_oauth {
+                        // Session or manual mode — just need username/password or token manually
+                    } else {
+                        // OAuth mode — need all 4
+                        if let (Ok(enc_id), Ok(enc_sec)) = (
+                            state.db.get_auth("reddit_client_id"),
+                            state.db.get_auth("reddit_client_secret"),
+                        ) {
+                            if let (Some(cid), Some(csec)) = (enc_id, enc_sec) {
+                                if let (Ok(client_id), Ok(client_secret), Ok(username), Ok(password)) = (
+                                    decrypt_api_key(&cid),
+                                    decrypt_api_key(&csec),
+                                    decrypt_api_key(
+                                        &state.db.get_auth("reddit_username").unwrap_or(None).unwrap_or_default()
+                                    ),
+                                    decrypt_api_key(
+                                        &state.db.get_auth("reddit_password").unwrap_or(None).unwrap_or_default()
+                                    ),
+                                ) {
+                                    let client = RedditClient::new(client_id, client_secret, username.clone(), password);
+                                    if let Ok(tokens) = client.authenticate() {
+                                        println!("[startup] Reconnected as u/{} via OAuth", tokens.username);
+                                        let client_arc = Arc::new(client);
+                                        *state.reddit_client.lock().unwrap() = Some(client_arc.clone());
+                                        let _ = start_scheduler_inner(&state, client_arc);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             Ok(())
         })
         .run(tauri::generate_context!())
