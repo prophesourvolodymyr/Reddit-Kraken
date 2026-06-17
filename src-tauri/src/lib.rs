@@ -316,7 +316,61 @@ fn get_posts(
     limit: u32,
     offset: u32,
 ) -> Result<Vec<Post>, String> {
+    if subreddit_id.is_some() {
+        if let Ok(client_guard) = state.reddit_client.lock() {
+            if client_guard.is_some() {
+                println!("[get_posts] Connected, fetching live...");
+                drop(client_guard);
+                fetch_posts_live_inner(&state, &subreddit_id);
+            }
+        }
+    }
     get_posts_inner(&state, subreddit_id, limit, offset)
+}
+
+fn fetch_posts_live_inner(state: &State<AppState>, subreddit_id: &Option<String>) {
+    let client = match state.reddit_client.lock() {
+        Ok(g) => match g.as_ref() {
+            Some(c) => c.clone(),
+            None => return,
+        },
+        Err(_) => return,
+    };
+
+    if let Some(ref sub_id) = subreddit_id {
+        let conn = match state.db.conn.lock() {
+            Ok(c) => c,
+            Err(_) => return,
+        };
+        let name: Option<String> = conn
+            .query_row("SELECT name FROM subreddits WHERE id = ?1", params![sub_id], |row| row.get(0))
+            .ok();
+        drop(conn);
+
+        if let Some(sub_name) = name {
+            println!("[get_posts] Fetching r/{} from Reddit...", sub_name);
+            match client.fetch_posts(&sub_name) {
+                Ok(fresh) => {
+                    println!("[get_posts] r/{}: got {} posts", sub_name, fresh.len());
+                    if let Ok(conn) = state.db.conn.lock() {
+                        for post in &fresh {
+                            let _ = conn.execute(
+                                "INSERT OR IGNORE INTO posts (id, subreddit_id, title, body, author, url, score, num_comments, created_utc, flair_text, over_18, spoiler, fetched_at)
+                                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                                params![
+                                    post.id, post.subreddit_id, post.title, post.body,
+                                    post.author, post.url, post.score, post.num_comments,
+                                    post.created_utc, post.flair_text,
+                                    post.over_18 as i32, post.spoiler as i32, post.fetched_at,
+                                ],
+                            );
+                        }
+                    }
+                }
+                Err(e) => eprintln!("[get_posts] FAILED r/{}: {}", sub_name, e),
+            }
+        }
+    }
 }
 
 #[tauri::command]
