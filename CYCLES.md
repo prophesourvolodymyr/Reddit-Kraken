@@ -1,102 +1,51 @@
-# CYCLES.md
+# CYCLES.md — Reddit-Kraken
 
-## Dependency Graph
-```
-Phase 1 (Foundation) ──→ Phase 2 (Core Engine) ──→ Phase 3 (Discovery) ──→ Phase 4 (API & Polish)
-F1 + F3 + F8               F4 + F2 + F10            F6 + F7 + F9           F11 + polish
-```
+## Cycle 0 — Documentation Reorganization
+- [x] New feature structure (F01–F10 with sub-features)
+- [x] All 48 DOCKS.md files written
+- [x] Old docs archived to `features/_archive/`
+- [x] Root index `features/DOCKS.md` updated
+- [x] CYCLES.md rewritten
+- [x] AGENTS.md updated
 
----
+## Cycle 1 — F01 Authentication + F02 Data Pipeline (Fix Broken)
+- [ ] F01 — Authentication
+  - [ ] F01-A Token Input — login form working, needs token persistence verification
+  - [ ] F01-B Persistence — encrypted storage + auto-restore (built, needs testing)
+  - [ ] F01-C Session Refresh — auto-refresh via reddit_session (built, needs testing)
+- [ ] F02 — Reddit Data Pipeline
+  - [ ] F02-A Post Fetching — real-time on click + scheduler (built, needs fixing)
+  - [ ] F02-B Comment Fetching — threaded comments on post open (built, needs testing)
+  - [ ] F02-C Subreddit Metadata — icons, colors, import subscriptions (built, needs icon fix)
+  - [ ] F02-D Content Submission — posting + commenting (NOT BUILT)
+  - [ ] F02-E Notifications — inbox + activity (NOT BUILT)
 
-## Phase 1 — Foundation ✅ ACTIVE
-**Features:** F1 (Reddit Fetching), F3 (UI Interface), F8 (LLM Providers)
+## Cycle 2 — F03 For You Feed + F06-C Color System + F06-D Tabs
+- [ ] F03 — For You Feed
+  - [ ] F03-A Scoring Engine — engagement + freshness algorithm
+  - [ ] F03-B Feed Composition — sort, dedup, paginate
+- [ ] F06-C Color System — extract dominant color from sub icon
+- [ ] F06-D Tab Navigation — fix General/For You behavior
 
-| # | Task | Status |
-|---|------|--------|
-| 1 | Rust: Cargo project structure, modules scaffold | [x] |
-| 2 | Rust: SQLite schema (subreddits, posts, comments, auth) | [x] |
-| 3 | Rust: Reddit OAuth password grant auth + token refresh | [x] |
-| 4 | Rust: Polling scheduler (tokio cron) — fetch posts per sub | [x] |
-| 5 | Rust: Dedup + store posts/comments in SQLite | [x] |
-| 6 | Rust: Rate limiting + exponential backoff | [x] |
-| 7 | Rust: Archiving hooks — save state on quit, prompt discard | [x] |
-| 8 | React: UI shell — Sidebar, TopBar, PostList, PostDetail | [x] |
-| 9 | React: FAB + NewPostModal + SettingsPanel | [x] |
-| 10 | React: For You dual-mode (Digested / Normal) | [x] |
-| 11 | React: Drag-and-drop sidebar with folder grouping | [x] |
-| 12 | React: AI badge ("Worth responding") on post cards | [x] |
-| 13 | Rust: LlmProvider trait (evaluate_post, suggest_reply, enhance) | [x] |
-| 14 | Rust: OpenAI provider implementation | [x] |
-| 15 | React: Settings UI for LLM provider config | [x] |
-| 16 | API key encryption at rest in SQLite | [x] |
+## Cycle 3 — F04 AI System
+- [ ] F04-A Provider Management — already built, needs verification
+- [ ] F04-B Post Evaluation — wire AI evaluation into post pipeline
+- [ ] F04-C Reply Generation — AI-drafted replies
+- [ ] F04-D Text Enhance — grammar/rewrite/expand
 
----
+## Cycle 4 — F05 Cross-Posting
+- [ ] F05-A Editor — master + per-community panels
+- [ ] F05-B AI Adapt — per-community content adaptation
+- [ ] F05-C Scheduling — per-sub timing + queue
+- [ ] F05-D Drafts — auto-save + recovery
+- [ ] F05-E Posting — sequential submit + progress
 
-## Phase 2 — Core Engine ⬜ NEXT
-**Features:** F4 (Cross-Posting), F2 (AI Engagement), F10 (Saved Folders)
-**Prompts:** `prompts/F2-phase-1-evaluation-pipeline.md` → `prompts/F10-phase-1-folder-system.md` → `prompts/F4-phase-1-cross-post-editor.md`
+## Cycle 5 — F06 UI Shell Polish
+- [ ] F06-A Sidebar — icon loading, color integration, badge computation
+- [ ] F06-B Post Views — image loading, card/compact polish
 
-| # | Task | Status |
-|---|------|--------|
-| 1 | React: Cross-posting editor — multi-sub grid layout | ⬜ |
-| 2 | React: Per-community adjustments panel (flairs, attachments, text tweaks) | ⬜ |
-| 3 | React: Scheduled posting UI (now / later / custom time) | ⬜ |
-| 4 | React: Batch-as-draft saving + auto-archive on quit | ⬜ |
-| 5 | Rust: POST /api/submit for cross-post (one sub at a time, sequential) | ⬜ |
-| 6 | Rust: Draft persistence — cross-post batches in SQLite | ⬜ |
-| 7 | Rust: Schedule engine (store + execute delayed posts) | ⬜ |
-| 8 | React: Post scheduling queue view | ⬜ |
-| 9 | Rust: AI evaluation — binary "worth responding" per post | ⬜ |
-| 10 | Rust: App memory — track seen posts, skip re-evaluation | ⬜ |
-| 11 | React: Engagement queue — scrollable "Worth responding" list | ⬜ |
-| 12 | React: Daily digest — per-channel, per-day categorization UI | ⬜ |
-| 13 | React: Folder CRUD — create/rename/delete saved folders | ⬜ |
-| 14 | React: Save post to folder action + folder picker | ⬜ |
-| 15 | React: Batch export links from folder (copy/download) | ⬜ |
-| 16 | Rust: Saved folders + folder items tables in SQLite | ⬜ |
-
----
-
-## Phase 3 — Discovery & Management ⬜
-**Features:** F6 (Filter/Search), F7 (Private Messages), F9 (Activity Center)
-
-| # | Task | Status |
-|---|------|--------|
-| 1 | Rust: FTS5 virtual table for posts | ⬜ |
-| 2 | Rust: Search query + combined filter logic | ⬜ |
-| 3 | React: Filter bar — sub, date, score, status dropdowns | ⬜ |
-| 4 | React: Search results with debounce + pagination | ⬜ |
-| 5 | React: Batch export from search results | ⬜ |
-| 6 | Rust: PM fetch — inbox, unread, sent via Reddit API | ⬜ |
-| 7 | Rust: PM compose + send + delete | ⬜ |
-| 8 | React: Inbox view — tabs, message detail, compose modal | ⬜ |
-| 9 | React: PM AI suggestion button (manual, no auto-respond) | ⬜ |
-| 10 | Rust: Activity polling — replies, comments on posts, PMs, mentions | ⬜ |
-| 11 | React: Activity Center panel — bell icon, dropdown, activity cards | ⬜ |
-| 12 | React: Activity quick reply (manual AI draft, user controls send) | ⬜ |
-| 13 | React: Activity history view | ⬜ |
-
----
-
-## Phase 4 — API & Polish ⬜
-**Features:** F11 (Custom API)
-
-| # | Task | Status |
-|---|------|--------|
-| 1 | Rust: Local HTTP server (embedded, loopback-only) | ⬜ |
-| 2 | Rust: API auth (token-based, local-only) | ⬜ |
-| 3 | Rust: POST /api/cross-post endpoint | ⬜ |
-| 4 | Rust: GET /api/drafts + POST /api/schedule endpoints | ⬜ |
-| 5 | Rust: GET /api/posts + GET /api/folders endpoints | ⬜ |
-| 6 | React: API settings UI — enable/disable, token management | ⬜ |
-| 7 | Desktop notifications for scheduled posts + activity | ⬜ |
-| 8 | Keyboard shortcuts audit + polish | ⬜ |
-| 9 | Empty states, error states, loading skeletons audit | ⬜ |
-
----
-
-## Progress
-Phase 1 ██████████ 100% (16/16)
-Phase 2 ░░░░░░░░░░   0% (0/16)
-Phase 3 ░░░░░░░░░░   0% (0/13)
-Phase 4 ░░░░░░░░░░   0% (0/9)
+## Cycle 6 — F07 + F08 + F09 + F10 Remaining
+- [ ] F07 — Filter & Search
+- [ ] F08 — Activity Center
+- [ ] F09 — Saved Folders
+- [ ] F10 — Local API

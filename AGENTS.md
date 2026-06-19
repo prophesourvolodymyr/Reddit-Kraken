@@ -117,6 +117,26 @@ You cannot start a feature until the ones it depends on pass verification.
 
 ### Feature DOCKS.md Is the Source of Truth
 
+## 3. The Feature System
+
+### Linear Build Order
+
+Every feature is numbered F01, F02, etc. Features are built in strict linear order:
+
+```
+F01 → F02 → F03 → F04 → F05 → F06 → F07 → F08
+                                              │
+                                   ┌──────────┘
+                                   ▼
+                   F09 → F10 → F11 → F12
+```
+
+Later features branch into parallelizable groups that don't block each other. But the core chain (F01→...→F08) is sequential — each feature depends on the ones before it.
+
+You cannot start a feature until the ones it depends on pass verification.
+
+### Feature DOCKS.md Is the Source of Truth
+
 Every visual or functional piece of the project has a DOCKS.md. This document defines:
 - **What**: exact deliverables
 - **Architecture**: component tree, data flow
@@ -155,23 +175,23 @@ DOCKS.md  →  AUDIT  →  BUILD  →  DEPLOY  →  TEST  →  VERIFIED
 - Motivation stays high — each feature completes and visibly works
 - No backtracking — a verified feature stays verified; you build forward, never redo
 
-Each cycle groups one feature (or a group of parallel features). Features leave a cycle only when all verification items pass.
+Each cycle groups one feature (or a group of parallel features). Features leave a cycle only when all verification items pass. CYCLES.md uses a compact checkbox-tree format:
 
 ```markdown
-# Cycle N — Feature Name
-**Start:** YYYY-MM-DD | **Target:** TBD | **Status:** pending/active/done
+# CYCLES.md — Project Name
 
-## Features
-- FNN — status
+## Cycle 0 — Documentation
+- [x] Project structure + all DOCKS.md files
+- [x] CYCLES.md created
 
-## Dependencies
-- Must complete after: FXX
-- Must complete before: FYY
+## Cycle 1 — First Build
+- [x] F00 — Bootstrap
+- [ ] F01 — Feature Name
+  - [ ] F01-A Sub-feature
+  - [ ] F01-B Sub-feature
 
-## Verification
-- [ ] device test
-- [ ] no regression in existing features
-- [ ] no crash
+## Cycle 2 — Next Phase
+- [ ] F02 — Another Feature
 ```
 
 ### Cycle 0 — Documentation Reorganization
