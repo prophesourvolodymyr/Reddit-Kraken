@@ -103,6 +103,7 @@ impl Scheduler {
                     post.over_18 as i32,
                     post.spoiler as i32,
                     post.fetched_at,
+                    post.thumbnail_url,
                 ],
             )?;
 

@@ -182,8 +182,11 @@ export default function PostList({
         setLoadState("loaded");
         return;
       }
+      setPosts([]);
+      setLoadState("empty");
+      return;
     } catch {
-      // Backend not available, fall through
+      // Backend not available, fall through to demo
     }
     if (isRedditConnected) {
       setPosts([]);

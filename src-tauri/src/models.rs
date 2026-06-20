@@ -38,6 +38,17 @@ pub struct RedditStatus {
     pub auth_mode: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct RedditProfile {
+    pub username: String,
+    pub avatar_url: Option<String>,
+    pub total_karma: i64,
+    pub link_karma: i64,
+    pub comment_karma: i64,
+    pub created_utc: Option<f64>,
+    pub active_sub_icon: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Post {
     pub id: String,

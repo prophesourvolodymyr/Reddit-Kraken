@@ -225,6 +225,39 @@ impl RedditClient {
 
     fn get_valid_token(&self) -> Result<String, AppError> {
         if self.auth_mode == AuthMode::ManualToken {
+            let needs_refresh = {
+                let tokens = self.tokens.lock().unwrap();
+                tokens.as_ref().map_or(true, |t| {
+                    chrono::Utc::now().timestamp() >= t.expires_at - 3600
+                })
+            };
+
+            if needs_refresh {
+                let session = self.session_for_refresh.lock().unwrap().clone();
+                if let Some(ref session_cookie) = session {
+                    match self.refresh_via_session(session_cookie) {
+                        Ok(new_token) => {
+                            eprintln!("[auth] Token refreshed via session cookie");
+                            let uname = {
+                                let tokens = self.tokens.lock().unwrap();
+                                tokens.as_ref().map(|t| t.username.clone()).unwrap_or_default()
+                            };
+                            let mut tokens = self.tokens.lock().unwrap();
+                            *tokens = Some(AuthTokens {
+                                access_token: new_token.clone(),
+                                refresh_token: None,
+                                expires_at: chrono::Utc::now().timestamp() + 82800,
+                                username: uname,
+                            });
+                            return Ok(new_token);
+                        }
+                        Err(ref e) => {
+                            eprintln!("[auth] Token refresh via session failed: {}", e);
+                        }
+                    }
+                }
+            }
+
             return self.tokens.lock().unwrap()
                 .as_ref()
                 .map(|t| t.access_token.clone())
@@ -312,8 +345,8 @@ impl RedditClient {
         mode: &AuthMode,
     ) -> reqwest::blocking::RequestBuilder {
         let base = match mode {
-            AuthMode::OAuth | AuthMode::ManualToken => OAUTH_BASE,
-            AuthMode::Session => REDDIT_BASE,
+            AuthMode::OAuth => OAUTH_BASE,
+            AuthMode::Session | AuthMode::ManualToken => REDDIT_BASE,
         };
 
         let req = client
@@ -321,9 +354,8 @@ impl RedditClient {
             .header("User-Agent", USER_AGENT);
 
         match mode {
-            AuthMode::OAuth | AuthMode::ManualToken => {
-                req.header("Authorization", format!("Bearer {}", token))
-            }
+            AuthMode::OAuth => req.header("Authorization", format!("Bearer {}", token)),
+            AuthMode::ManualToken => req.header("Cookie", format!("token_v2={}", token)),
             AuthMode::Session => req.header("Cookie", format!("reddit_session={}", token)),
         }
     }
@@ -420,11 +452,59 @@ impl RedditClient {
 
     pub fn ping(&self) -> Result<String, AppError> {
         #[derive(serde::Deserialize)]
-        struct MeResponse {
+        struct MeData {
             name: String,
+            icon_img: Option<String>,
+            snoovatar_img: Option<String>,
+            total_karma: Option<i64>,
         }
-        let me: MeResponse = self.reddit_get("/api/v1/me")?;
+        #[derive(serde::Deserialize)]
+        struct MeWrapped {
+            data: MeData,
+        }
+
+        if self.auth_mode == AuthMode::ManualToken {
+            if let Ok(me) = self.reddit_get::<MeWrapped>("/api/v1/me") {
+                return Ok(me.data.name);
+            }
+        }
+
+        let me: MeData = self.reddit_get("/api/v1/me")?;
         Ok(me.name)
+    }
+
+    pub fn fetch_my_profile(&self) -> Result<crate::models::RedditProfile, AppError> {
+        #[derive(serde::Deserialize)]
+        struct MeData {
+            name: String,
+            icon_img: Option<String>,
+            snoovatar_img: Option<String>,
+            total_karma: Option<i64>,
+            link_karma: Option<i64>,
+            comment_karma: Option<i64>,
+            created_utc: Option<f64>,
+            subreddit: Option<MeSubreddit>,
+        }
+        #[derive(serde::Deserialize)]
+        struct MeSubreddit {
+            icon_img: Option<String>,
+        }
+        #[derive(serde::Deserialize)]
+        struct MeWrapped {
+            data: MeData,
+        }
+
+        let me: MeWrapped = self.reddit_get("/api/v1/me")?;
+
+        Ok(crate::models::RedditProfile {
+            username: me.data.name,
+            avatar_url: me.data.snoovatar_img.or(me.data.icon_img),
+            total_karma: me.data.total_karma.unwrap_or(0),
+            link_karma: me.data.link_karma.unwrap_or(0),
+            comment_karma: me.data.comment_karma.unwrap_or(0),
+            created_utc: me.data.created_utc,
+            active_sub_icon: me.data.subreddit.and_then(|s| s.icon_img),
+        })
     }
 
     pub fn fetch_subreddit_info(
